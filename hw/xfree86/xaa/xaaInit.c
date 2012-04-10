@@ -38,7 +38,7 @@ static PixmapPtr XAACreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
 static Bool XAADestroyPixmap(PixmapPtr pPixmap);
 static Bool XAAEnterVT(ScrnInfoPtr pScrn, int flags);
 static void XAALeaveVT(ScrnInfoPtr pScrn, int flags);
-static int XAASetDGAMode(int index, int num, DGADevicePtr devRet);
+static int XAASetDGAMode(ScrnInfoPtr pScrn, int num, DGADevicePtr devRet);
 static void XAAEnableDisableFBAccess(ScrnInfoPtr pScrn, Bool enable);
 static Bool XAAChangeWindowAttributes(WindowPtr pWin, unsigned long mask);
 
@@ -549,9 +549,9 @@ typedef struct {
 } SavedCacheState, *SavedCacheStatePtr;
 
 static int
-XAASetDGAMode(int index, int num, DGADevicePtr devRet)
+XAASetDGAMode(ScrnInfoPtr pScrn, int num, DGADevicePtr devRet)
 {
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_SCREEN(pScreen);
     XAAScreenPtr pScreenPriv =
         (XAAScreenPtr) dixLookupPrivate(&pScreen->devPrivates, XAAScreenKey);
@@ -567,7 +567,7 @@ XAASetDGAMode(int index, int num, DGADevicePtr devRet)
         infoRec->dgaSaves = NULL;
     }
 
-    ret = (*pScreenPriv->SetDGAMode) (index, num, devRet);
+    ret = (*pScreenPriv->SetDGAMode) (pScrn, num, devRet);
     if (ret != Success)
         return ret;
 

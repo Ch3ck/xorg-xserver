@@ -82,7 +82,7 @@ typedef struct {
     StoreColorsProcPtr StoreColors;
     Bool (*EnterVT) (ScrnInfoPtr, int);
     Bool (*SwitchMode) (ScrnInfoPtr, DisplayModePtr, int);
-    int (*SetDGAMode) (int, int, DGADevicePtr);
+    int (*SetDGAMode) (ScrnInfoPtr, int, DGADevicePtr);
     xf86ChangeGammaProc *ChangeGamma;
     int maxColors;
     int sigRGBbits;
@@ -119,7 +119,7 @@ static Bool CMapEnterVT(ScrnInfoPtr, int);
 static Bool CMapSwitchMode(ScrnInfoPtr, DisplayModePtr, int);
 
 #ifdef XFreeXDGA
-static int CMapSetDGAMode(int, int, DGADevicePtr);
+static int CMapSetDGAMode(ScrnInfoPtr, int, DGADevicePtr);
 #endif
 static int CMapChangeGamma(ScrnInfoPtr, Gamma);
 
@@ -498,16 +498,16 @@ CMapSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 
 #ifdef XFreeXDGA
 static int
-CMapSetDGAMode(int index, int num, DGADevicePtr dev)
+CMapSetDGAMode(ScrnInfoPtr pScrn, int num, DGADevicePtr dev)
 {
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     CMapScreenPtr pScreenPriv =
         (CMapScreenPtr) dixLookupPrivate(&pScreen->devPrivates, CMapScreenKey);
     int ret;
 
-    ret = (*pScreenPriv->SetDGAMode) (index, num, dev);
+    ret = (*pScreenPriv->SetDGAMode) (pScrn, num, dev);
 
-    pScreenPriv->isDGAmode = DGAActive(index);
+    pScreenPriv->isDGAmode = DGAActive(pScrn->scrnIndex);
 
     if (!pScreenPriv->isDGAmode && GetInstalledmiColormap(pScreen)
         && xf86ScreenToScrn(pScreen)->vtSema)
