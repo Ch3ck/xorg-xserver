@@ -125,7 +125,7 @@ typedef struct _VGAarbiterScreen {
     UnrealizeCursorProcPtr UnrealizeCursor;
     RecolorCursorProcPtr RecolorCursor;
     SetCursorPositionProcPtr SetCursorPosition;
-    void (*AdjustFrame) (int, int, int, int);
+    void (*AdjustFrame) (ScrnInfoPtr, int, int, int);
     Bool (*SwitchMode) (int, DisplayModePtr, int);
     Bool (*EnterVT) (ScrnInfoPtr, int);
     void (*LeaveVT) (ScrnInfoPtr, int);
@@ -176,7 +176,7 @@ static Bool VGAarbiterDisplayCursor(DeviceIntPtr pDev, ScreenPtr pScreen,
 static Bool VGAarbiterSetCursorPosition(DeviceIntPtr pDev, ScreenPtr
                                         pScreen, int x, int y,
                                         Bool generateEvent);
-static void VGAarbiterAdjustFrame(int index, int x, int y, int flags);
+static void VGAarbiterAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags);
 static Bool VGAarbiterSwitchMode(int index, DisplayModePtr mode, int flags);
 static Bool VGAarbiterEnterVT(ScrnInfoPtr pScrn, int flags);
 static void VGAarbiterLeaveVT(ScrnInfoPtr pScrn, int flags);

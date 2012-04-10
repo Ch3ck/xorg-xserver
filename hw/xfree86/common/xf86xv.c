@@ -103,7 +103,7 @@ static void xf86XVClipNotify(WindowPtr pWin, int dx, int dy);
 
 static Bool xf86XVEnterVT(ScrnInfoPtr, int);
 static void xf86XVLeaveVT(ScrnInfoPtr, int);
-static void xf86XVAdjustFrame(int index, int x, int y, int flags);
+static void xf86XVAdjustFrame(ScrnInfoPtr, int x, int y, int flags);
 static void xf86XVModeSet(ScrnInfoPtr pScrn);
 
 /* misc */
@@ -1358,15 +1358,14 @@ xf86XVLeaveVT(ScrnInfoPtr pScrn, int flags)
 }
 
 static void
-xf86XVAdjustFrame(int index, int x, int y, int flags)
+xf86XVAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
     ScreenPtr pScreen = pScrn->pScreen;
     XF86XVScreenPtr ScreenPriv = GET_XF86XV_SCREEN(pScreen);
 
     if (ScreenPriv->AdjustFrame) {
         pScrn->AdjustFrame = ScreenPriv->AdjustFrame;
-        (*pScrn->AdjustFrame) (index, x, y, flags);
+        (*pScrn->AdjustFrame) (pScrn, x, y, flags);
         pScrn->AdjustFrame = xf86XVAdjustFrame;
     }
 

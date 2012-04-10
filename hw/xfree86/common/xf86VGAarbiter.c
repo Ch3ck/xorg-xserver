@@ -464,15 +464,15 @@ VGAarbiterSetCursorPosition(DeviceIntPtr pDev,
 }
 
 static void
-VGAarbiterAdjustFrame(int index, int x, int y, int flags)
+VGAarbiterAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     VGAarbiterScreenPtr pScreenPriv =
         (VGAarbiterScreenPtr) dixLookupPrivate(&pScreen->devPrivates,
                                                VGAarbiterScreenKey);
 
     VGAGet(pScreen);
-    (*pScreenPriv->AdjustFrame) (index, x, y, flags);
+    (*pScreenPriv->AdjustFrame) (pScrn, x, y, flags);
     VGAPut();
 }
 

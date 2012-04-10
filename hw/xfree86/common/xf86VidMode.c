@@ -303,7 +303,7 @@ VidModeSetViewPort(int scrnIndex, int x, int y)
                          pScrn->virtualY - pScrn->currentMode->VDisplay);
     pScrn->frameY1 = pScrn->frameY0 + pScrn->currentMode->VDisplay - 1;
     if (pScrn->AdjustFrame != NULL)
-        (pScrn->AdjustFrame) (scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+        (pScrn->AdjustFrame) (pScrn, pScrn->frameX0, pScrn->frameY0, 0);
 
     return TRUE;
 }

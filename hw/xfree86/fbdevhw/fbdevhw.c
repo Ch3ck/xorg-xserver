@@ -797,9 +797,8 @@ fbdevHWSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 }
 
 void
-fbdevHWAdjustFrame(int scrnIndex, int x, int y, int flags)
+fbdevHWAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     fbdevHWPtr fPtr = FBDEVHWPTR(pScrn);
 
     if (x < 0 || x + fPtr->var.xres > fPtr->var.xres_virtual ||
@@ -809,7 +808,7 @@ fbdevHWAdjustFrame(int scrnIndex, int x, int y, int flags)
     fPtr->var.xoffset = x;
     fPtr->var.yoffset = y;
     if (-1 == ioctl(fPtr->fd, FBIOPAN_DISPLAY, (void *) &fPtr->var))
-        xf86DrvMsgVerb(scrnIndex, X_WARNING, 5,
+        xf86DrvMsgVerb(pScrn->scrnIndex, X_WARNING, 5,
                        "FBIOPAN_DISPLAY: %s\n", strerror(errno));
 }
 
@@ -818,7 +817,7 @@ fbdevHWEnterVT(ScrnInfoPtr pScrn, int flags)
 {
     if (!fbdevHWModeInit(pScrn, pScrn->currentMode))
         return FALSE;
-    fbdevHWAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    fbdevHWAdjustFrame(pScrn, pScrn->frameX0, pScrn->frameY0, 0);
     return TRUE;
 }
 

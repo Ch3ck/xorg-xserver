@@ -173,7 +173,7 @@ xf86PointerMoved(int scrnIndex, int x, int y)
     }
 
     if (frameChanged && pScr->AdjustFrame != NULL)
-        pScr->AdjustFrame(pScr->scrnIndex, pScr->frameX0, pScr->frameY0, 0);
+        pScr->AdjustFrame(pScr, pScr->frameX0, pScr->frameY0, 0);
 }
 
 /*
@@ -270,7 +270,7 @@ xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
     xf86UnblockSIGIO(was_blocked);
 
     if (pScr->AdjustFrame)
-        (*pScr->AdjustFrame) (pScr->scrnIndex, pScr->frameX0, pScr->frameY0, 0);
+        (*pScr->AdjustFrame) (pScr, pScr->frameX0, pScr->frameY0, 0);
 
     /* The original code centered the frame around the cursor if possible.
      * Since this is hard to achieve with multiple cursors, we do the following:

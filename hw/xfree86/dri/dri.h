@@ -73,7 +73,7 @@ typedef int DRIWindowRequests;
 #define DRI_ALL_WINDOWS      2
 
 typedef void (*ClipNotifyPtr) (WindowPtr, int, int);
-typedef void (*AdjustFramePtr) (int scrnIndex, int x, int y, int flags);
+typedef void (*AdjustFramePtr) (ScrnInfoPtr pScrn, int x, int y, int flags);
 
 /*
  * These functions can be wrapped by the DRI.  Each of these have
@@ -334,7 +334,7 @@ extern _X_EXPORT drm_context_t DRIGetContext(ScreenPtr pScreen);
 extern _X_EXPORT void DRIQueryVersion(int *majorVersion,
                                       int *minorVersion, int *patchVersion);
 
-extern _X_EXPORT void DRIAdjustFrame(int scrnIndex, int x, int y, int flags);
+extern _X_EXPORT void DRIAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags);
 
 extern _X_EXPORT void DRIMoveBuffersHelper(ScreenPtr pScreen,
                                            int dx,

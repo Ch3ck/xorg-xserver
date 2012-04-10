@@ -2305,15 +2305,14 @@ _DRIAdjustFrame(ScrnInfoPtr pScrn, DRIScreenPrivPtr pDRIPriv, int x, int y)
 }
 
 void
-DRIAdjustFrame(int scrnIndex, int x, int y, int flags)
+DRIAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
-    ScreenPtr pScreen = screenInfo.screens[scrnIndex];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     int px, py;
 
     if (!pDRIPriv || !pDRIPriv->pSAREA) {
-        DRIDrvMsg(scrnIndex, X_ERROR, "[DRI] No SAREA (%p %p)\n",
+        DRIDrvMsg(pScrn->scrnIndex, X_ERROR, "[DRI] No SAREA (%p %p)\n",
                   pDRIPriv, pDRIPriv ? pDRIPriv->pSAREA : NULL);
         return;
     }
@@ -2345,7 +2344,7 @@ DRIAdjustFrame(int scrnIndex, int x, int y, int flags)
         /* unwrap */
         pScrn->AdjustFrame = pDRIPriv->wrap.AdjustFrame;
         /* call lower layers */
-        (*pScrn->AdjustFrame) (scrnIndex, x, y, flags);
+        (*pScrn->AdjustFrame) (pScrn, x, y, flags);
         /* rewrap */
         pDRIPriv->wrap.AdjustFrame = pScrn->AdjustFrame;
         pScrn->AdjustFrame = DRIAdjustFrame;
