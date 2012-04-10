@@ -229,7 +229,7 @@ xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
         miPointerGetPosition(dev, &px, &py);
 
     was_blocked = xf86BlockSIGIO();
-    Switched = (*pScr->SwitchMode) (pScr->scrnIndex, mode, 0);
+    Switched = (*pScr->SwitchMode) (pScr, mode, 0);
     if (Switched) {
         pScr->currentMode = mode;
 

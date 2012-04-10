@@ -9245,9 +9245,9 @@ ZZZScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 	<programlisting>
 static Bool
-ZZZSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+ZZZSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 {
-    return ZZZModeInit(xf86Screens[scrnIndex], mode);
+    return ZZZModeInit(pScrn, mode);
 }
 	</programlisting>
       </sect3>

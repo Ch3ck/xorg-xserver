@@ -477,16 +477,16 @@ VGAarbiterAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 }
 
 static Bool
-VGAarbiterSwitchMode(int index, DisplayModePtr mode, int flags)
+VGAarbiterSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 {
     Bool val;
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     VGAarbiterScreenPtr pScreenPriv =
         (VGAarbiterScreenPtr) dixLookupPrivate(&pScreen->devPrivates,
                                                VGAarbiterScreenKey);
 
     VGAGet(pScreen);
-    val = (*pScreenPriv->SwitchMode) (index, mode, flags);
+    val = (*pScreenPriv->SwitchMode) (pScrn, mode, flags);
     VGAPut();
     return val;
 }

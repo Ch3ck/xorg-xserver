@@ -786,10 +786,8 @@ fbdevHWValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 }
 
 Bool
-fbdevHWSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+fbdevHWSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-
     if (!fbdevHWSetMode(pScrn, mode, FALSE))
         return FALSE;
 

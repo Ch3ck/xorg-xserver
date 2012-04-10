@@ -137,7 +137,7 @@ fbdevHWValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 }
 
 Bool
-fbdevHWSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+fbdevHWSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 {
     return FALSE;
 }

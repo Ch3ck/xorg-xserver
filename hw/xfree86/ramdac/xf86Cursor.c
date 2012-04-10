@@ -50,7 +50,7 @@ static void xf86CursorQueryBestSize(int, unsigned short *, unsigned short *,
 /* ScrnInfoRec functions */
 
 static void xf86CursorEnableDisableFBAccess(int, Bool);
-static Bool xf86CursorSwitchMode(int, DisplayModePtr, int);
+static Bool xf86CursorSwitchMode(ScrnInfoPtr, DisplayModePtr, int);
 
 Bool
 xf86InitCursor(ScreenPtr pScreen, xf86CursorInfoPtr infoPtr)
@@ -237,10 +237,10 @@ xf86CursorEnableDisableFBAccess(int index, Bool enable)
 }
 
 static Bool
-xf86CursorSwitchMode(int index, DisplayModePtr mode, int flags)
+xf86CursorSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 {
     Bool ret;
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     xf86CursorScreenPtr ScreenPriv =
         (xf86CursorScreenPtr) dixLookupPrivate(&pScreen->devPrivates,
                                                xf86CursorScreenKey);
@@ -250,7 +250,7 @@ xf86CursorSwitchMode(int index, DisplayModePtr mode, int flags)
         ScreenPriv->isUp = FALSE;
     }
 
-    ret = (*ScreenPriv->SwitchMode) (index, mode, flags);
+    ret = (*ScreenPriv->SwitchMode) (pScrn, mode, flags);
 
     /*
      * Cannot restore cursor here because the new frame[XY][01] haven't been

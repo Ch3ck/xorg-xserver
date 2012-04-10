@@ -81,7 +81,7 @@ typedef struct {
     InstallColormapProcPtr InstallColormap;
     StoreColorsProcPtr StoreColors;
     Bool (*EnterVT) (ScrnInfoPtr, int);
-    Bool (*SwitchMode) (int, DisplayModePtr, int);
+    Bool (*SwitchMode) (ScrnInfoPtr, DisplayModePtr, int);
     int (*SetDGAMode) (int, int, DGADevicePtr);
     xf86ChangeGammaProc *ChangeGamma;
     int maxColors;
@@ -116,7 +116,7 @@ static Bool CMapCreateColormap(ColormapPtr);
 static void CMapDestroyColormap(ColormapPtr);
 
 static Bool CMapEnterVT(ScrnInfoPtr, int);
-static Bool CMapSwitchMode(int, DisplayModePtr, int);
+static Bool CMapSwitchMode(ScrnInfoPtr, DisplayModePtr, int);
 
 #ifdef XFreeXDGA
 static int CMapSetDGAMode(int, int, DGADevicePtr);
@@ -482,13 +482,13 @@ CMapEnterVT(ScrnInfoPtr pScrn, int flags)
 }
 
 static Bool
-CMapSwitchMode(int index, DisplayModePtr mode, int flags)
+CMapSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode, int flags)
 {
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     CMapScreenPtr pScreenPriv =
         (CMapScreenPtr) dixLookupPrivate(&pScreen->devPrivates, CMapScreenKey);
 
-    if ((*pScreenPriv->SwitchMode) (index, mode, flags)) {
+    if ((*pScreenPriv->SwitchMode) (pScrn, mode, flags)) {
         if (GetInstalledmiColormap(pScreen))
             CMapReinstallMap(GetInstalledmiColormap(pScreen));
         return TRUE;
