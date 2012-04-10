@@ -114,7 +114,7 @@ suspend(pmEvent event, Bool undo)
         if (xf86Screens[i]->PMEvent)
             xf86Screens[i]->PMEvent(i, event, undo);
         else {
-            xf86Screens[i]->LeaveVT(i, 0);
+            xf86Screens[i]->LeaveVT(xf86Screens[i], 0);
             xf86Screens[i]->vtSema = FALSE;
         }
     }
@@ -134,7 +134,7 @@ resume(pmEvent event, Bool undo)
             xf86Screens[i]->PMEvent(i, event, undo);
         else {
             xf86Screens[i]->vtSema = TRUE;
-            xf86Screens[i]->EnterVT(i, 0);
+            xf86Screens[i]->EnterVT(xf86Screens[i], 0);
         }
     }
     xf86UnblockSIGIO(sigio_blocked_for_suspend);

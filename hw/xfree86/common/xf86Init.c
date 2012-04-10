@@ -1038,7 +1038,7 @@ AbortDDX(enum ExitCode error)
                  * screen explicitely.
                  */
                 xf86VGAarbiterLock(xf86Screens[i]);
-                (xf86Screens[i]->LeaveVT) (i, 0);
+                (xf86Screens[i]->LeaveVT) (xf86Screens[i], 0);
                 xf86VGAarbiterUnlock(xf86Screens[i]);
             }
     }

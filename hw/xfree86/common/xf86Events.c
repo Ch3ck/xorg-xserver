@@ -457,7 +457,7 @@ xf86VTSwitch(void)
 
         prevSIGIO = xf86BlockSIGIO();
         for (i = 0; i < xf86NumScreens; i++)
-            xf86Screens[i]->LeaveVT(i, 0);
+            xf86Screens[i]->LeaveVT(xf86Screens[i], 0);
 
         xf86AccessLeave();      /* We need this here, otherwise */
 
@@ -469,7 +469,7 @@ xf86VTSwitch(void)
             DebugF("xf86VTSwitch: Leave failed\n");
             xf86AccessEnter();
             for (i = 0; i < xf86NumScreens; i++) {
-                if (!xf86Screens[i]->EnterVT(i, 0))
+                if (!xf86Screens[i]->EnterVT(xf86Screens[i], 0))
                     FatalError("EnterVT failed for screen %d\n", i);
             }
             if (!(dispatchException & DE_TERMINATE)) {
@@ -524,7 +524,7 @@ xf86VTSwitch(void)
         xf86AccessEnter();
         for (i = 0; i < xf86NumScreens; i++) {
             xf86Screens[i]->vtSema = TRUE;
-            if (!xf86Screens[i]->EnterVT(i, 0))
+            if (!xf86Screens[i]->EnterVT(xf86Screens[i], 0))
                 FatalError("EnterVT failed for screen %d\n", i);
         }
         for (i = 0; i < xf86NumScreens; i++) {

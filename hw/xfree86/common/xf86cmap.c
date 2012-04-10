@@ -80,7 +80,7 @@ typedef struct {
     DestroyColormapProcPtr DestroyColormap;
     InstallColormapProcPtr InstallColormap;
     StoreColorsProcPtr StoreColors;
-    Bool (*EnterVT) (int, int);
+    Bool (*EnterVT) (ScrnInfoPtr, int);
     Bool (*SwitchMode) (int, DisplayModePtr, int);
     int (*SetDGAMode) (int, int, DGADevicePtr);
     xf86ChangeGammaProc *ChangeGamma;
@@ -115,7 +115,7 @@ static Bool CMapCloseScreen(ScreenPtr);
 static Bool CMapCreateColormap(ColormapPtr);
 static void CMapDestroyColormap(ColormapPtr);
 
-static Bool CMapEnterVT(int, int);
+static Bool CMapEnterVT(ScrnInfoPtr, int);
 static Bool CMapSwitchMode(int, DisplayModePtr, int);
 
 #ifdef XFreeXDGA
@@ -462,16 +462,15 @@ CMapInstallColormap(ColormapPtr pmap)
 /**** ScrnInfoRec functions ****/
 
 static Bool
-CMapEnterVT(int index, int flags)
+CMapEnterVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     Bool ret;
     CMapScreenPtr pScreenPriv =
         (CMapScreenPtr) dixLookupPrivate(&pScreen->devPrivates, CMapScreenKey);
 
     pScrn->EnterVT = pScreenPriv->EnterVT;
-    ret = (*pScreenPriv->EnterVT) (index, flags);
+    ret = (*pScreenPriv->EnterVT) (pScrn, flags);
     pScreenPriv->EnterVT = pScrn->EnterVT;
     pScrn->EnterVT = CMapEnterVT;
     if (ret) {

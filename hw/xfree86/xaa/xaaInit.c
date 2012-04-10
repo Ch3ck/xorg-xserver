@@ -36,8 +36,8 @@ static void XAAGetSpans(DrawablePtr pDrawable, int wMax, DDXPointPtr ppt,
 static PixmapPtr XAACreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
                                  unsigned usage_hint);
 static Bool XAADestroyPixmap(PixmapPtr pPixmap);
-static Bool XAAEnterVT(int index, int flags);
-static void XAALeaveVT(int index, int flags);
+static Bool XAAEnterVT(ScrnInfoPtr pScrn, int flags);
+static void XAALeaveVT(ScrnInfoPtr pScrn, int flags);
 static int XAASetDGAMode(int index, int num, DGADevicePtr devRet);
 static void XAAEnableDisableFBAccess(int index, Bool enable);
 static Bool XAAChangeWindowAttributes(WindowPtr pWin, unsigned long mask);
@@ -509,26 +509,24 @@ XAAChangeWindowAttributes(WindowPtr pWin, unsigned long mask)
 /*  These two aren't really needed for anything */
 
 static Bool
-XAAEnterVT(int index, int flags)
+XAAEnterVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
     Bool ret;
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XAAScreenPtr pScreenPriv =
         (XAAScreenPtr) dixLookupPrivate(&pScreen->devPrivates, XAAScreenKey);
 
     pScrn->EnterVT = pScreenPriv->EnterVT;
-    ret = ((*pScreenPriv->EnterVT) (index, flags));
+    ret = ((*pScreenPriv->EnterVT) (pScrn, flags));
     pScreenPriv->EnterVT = pScrn->EnterVT;
     pScrn->EnterVT = XAAEnterVT;
     return ret;
 }
 
 static void
-XAALeaveVT(int index, int flags)
+XAALeaveVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XAAScreenPtr pScreenPriv =
         (XAAScreenPtr) dixLookupPrivate(&pScreen->devPrivates, XAAScreenKey);
     XAAInfoRecPtr infoRec = pScreenPriv->AccelInfoRec;
@@ -539,7 +537,7 @@ XAALeaveVT(int index, int flags)
     }
 
     pScrn->LeaveVT = pScreenPriv->LeaveVT;
-    (*pScreenPriv->LeaveVT) (index, flags);
+    (*pScreenPriv->LeaveVT) (pScrn, flags);
     pScreenPriv->LeaveVT = pScrn->LeaveVT;
     pScrn->LeaveVT = XAALeaveVT;
 }

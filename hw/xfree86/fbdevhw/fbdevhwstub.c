@@ -148,13 +148,13 @@ fbdevHWAdjustFrame(int scrnIndex, int x, int y, int flags)
 }
 
 Bool
-fbdevHWEnterVT(int scrnIndex, int flags)
+fbdevHWEnterVT(ScrnInfoPtr pScrn, int flags)
 {
     return FALSE;
 }
 
 void
-fbdevHWLeaveVT(int scrnIndex, int flags)
+fbdevHWLeaveVT(ScrnInfoPtr pScrn, int flags)
 {
 }
 

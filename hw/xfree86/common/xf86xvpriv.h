@@ -42,8 +42,8 @@ typedef struct {
     WindowExposuresProcPtr WindowExposures;
     PostValidateTreeProcPtr PostValidateTree;
     void (*AdjustFrame) (int, int, int, int);
-    Bool (*EnterVT) (int, int);
-    void (*LeaveVT) (int, int);
+    Bool (*EnterVT) (ScrnInfoPtr, int);
+    void (*LeaveVT) (ScrnInfoPtr, int);
     xf86ModeSetProc *ModeSet;
 } XF86XVScreenRec, *XF86XVScreenPtr;
 

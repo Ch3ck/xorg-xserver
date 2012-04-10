@@ -1577,7 +1577,7 @@ Here is what <function>InitOutput()</function> does:
 
       <blockquote><para>
 	  <programlisting>
-    Bool ChipEnterVT(int index, int flags);
+    Bool ChipEnterVT(ScrnInfoPtr pScrn, int flags);
 	  </programlisting>
 	  <blockquote><para>
       This function should initialise the current video mode and
@@ -1594,7 +1594,7 @@ Here is what <function>InitOutput()</function> does:
 
       <blockquote><para>
 	  <programlisting>
-    void ChipLeaveVT(int index, int flags);
+    void ChipLeaveVT(ScrnInfoPtr pScrn, int flags);
 	  </programlisting>
 	  <blockquote><para>
       This function should restore the saved video state.  If
@@ -9283,16 +9283,14 @@ ZZZAdjustFrame(int scrnIndex, int x, int y, int flags)
 
 	<programlisting>
 static Bool
-ZZZEnterVT(int scrnIndex, int flags)
+ZZZEnterVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     return ZZZModeInit(pScrn, pScrn-&gt;currentMode);
 }
 
 static void
-ZZZLeaveVT(int scrnIndex, int flags)
+ZZZLeaveVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     ZZZRestore(pScrn);
 }
 	</programlisting>

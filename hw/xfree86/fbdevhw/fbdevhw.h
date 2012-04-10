@@ -50,8 +50,8 @@ extern _X_EXPORT Bool fbdevHWSwitchMode(int scrnIndex, DisplayModePtr mode,
                                         int flags);
 extern _X_EXPORT void fbdevHWAdjustFrame(int scrnIndex, int x, int y,
                                          int flags);
-extern _X_EXPORT Bool fbdevHWEnterVT(int scrnIndex, int flags);
-extern _X_EXPORT void fbdevHWLeaveVT(int scrnIndex, int flags);
+extern _X_EXPORT Bool fbdevHWEnterVT(ScrnInfoPtr pScrn, int flags);
+extern _X_EXPORT void fbdevHWLeaveVT(ScrnInfoPtr pScrn, int flags);
 extern _X_EXPORT void fbdevHWDPMSSet(ScrnInfoPtr pScrn, int mode, int flags);
 
 extern _X_EXPORT Bool fbdevHWSaveScreen(ScreenPtr pScreen, int mode);

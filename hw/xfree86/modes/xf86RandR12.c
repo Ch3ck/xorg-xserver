@@ -1723,10 +1723,9 @@ xf86RandR12ChangeGamma(int scrnIndex, Gamma gamma)
 }
 
 static Bool
-xf86RandR12EnterVT(int screen_index, int flags)
+xf86RandR12EnterVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScreenPtr pScreen = screenInfo.screens[screen_index];
-    ScrnInfoPtr pScrn = xf86Screens[screen_index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     rrScrPrivPtr rp = rrGetScrPriv(pScreen);
     Bool ret;
@@ -1734,7 +1733,7 @@ xf86RandR12EnterVT(int screen_index, int flags)
 
     if (randrp->orig_EnterVT) {
         pScrn->EnterVT = randrp->orig_EnterVT;
-        ret = pScrn->EnterVT(screen_index, flags);
+        ret = pScrn->EnterVT(pScrn, flags);
         randrp->orig_EnterVT = pScrn->EnterVT;
         pScrn->EnterVT = xf86RandR12EnterVT;
         if (!ret)

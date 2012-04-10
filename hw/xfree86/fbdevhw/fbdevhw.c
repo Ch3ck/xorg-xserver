@@ -814,21 +814,17 @@ fbdevHWAdjustFrame(int scrnIndex, int x, int y, int flags)
 }
 
 Bool
-fbdevHWEnterVT(int scrnIndex, int flags)
+fbdevHWEnterVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-
     if (!fbdevHWModeInit(pScrn, pScrn->currentMode))
         return FALSE;
-    fbdevHWAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    fbdevHWAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
     return TRUE;
 }
 
 void
-fbdevHWLeaveVT(int scrnIndex, int flags)
+fbdevHWLeaveVT(ScrnInfoPtr pScrn, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-
     fbdevHWRestore(pScrn);
 }
 
