@@ -89,15 +89,16 @@ xf86ExtendedInitInt10(int entityIndex, int Flags)
     memType cs;
     legacyVGARec vga;
     Bool videoBiosMapped = FALSE;
-
+    ScrnInfoPtr pScrn;
     if (int10Generation != serverGeneration) {
         counter = 0;
         int10Generation = serverGeneration;
     }
 
-    screen = (xf86FindScreenForEntity(entityIndex))->scrnIndex;
+    pScrn = xf86FindScreenForEntity(entityIndex);
+    screen = pScrn->scrnIndex;
 
-    options = xf86HandleInt10Options(xf86Screens[screen], entityIndex);
+    options = xf86HandleInt10Options(pScrn, entityIndex);
 
     if (int10skip(options)) {
         free(options);
@@ -106,7 +107,7 @@ xf86ExtendedInitInt10(int entityIndex, int Flags)
 
 #if defined DoSubModules
     if (loadedSubModule == INT10_NOT_LOADED)
-        loadedSubModule = int10LinuxLoadSubModule(xf86Screens[screen]);
+        loadedSubModule = int10LinuxLoadSubModule(pScrn);
 
     if (loadedSubModule == INT10_LOAD_FAILED)
         return NULL;
