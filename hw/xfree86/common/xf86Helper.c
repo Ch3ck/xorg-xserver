@@ -215,7 +215,7 @@ xf86DeleteScreen(int scrnIndex, int flags)
 
     /* If a FreeScreen function is defined, call it here */
     if (pScrn->FreeScreen != NULL)
-        pScrn->FreeScreen(scrnIndex, 0);
+        pScrn->FreeScreen(pScrn, 0);
 
     while (pScrn->modes)
         xf86DeleteMode(&pScrn->modes, pScrn->modes);

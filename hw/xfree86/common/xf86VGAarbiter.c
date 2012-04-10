@@ -526,15 +526,15 @@ VGAarbiterLeaveVT(ScrnInfoPtr pScrn, int flags)
 }
 
 static void
-VGAarbiterFreeScreen(int index, int flags)
+VGAarbiterFreeScreen(ScrnInfoPtr pScrn, int flags)
 {
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     VGAarbiterScreenPtr pScreenPriv =
         (VGAarbiterScreenPtr) dixLookupPrivate(&pScreen->devPrivates,
                                                VGAarbiterScreenKey);
 
     VGAGet(pScreen);
-    (*pScreenPriv->FreeScreen) (index, flags);
+    (*pScreenPriv->FreeScreen) (pScrn, flags);
     VGAPut();
 }
 
