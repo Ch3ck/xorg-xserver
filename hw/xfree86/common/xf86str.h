@@ -639,7 +639,7 @@ typedef void xf86FreeScreenProc(ScrnInfoPtr, int);
 typedef ModeStatus xf86ValidModeProc(ScrnInfoPtr, DisplayModePtr, Bool, int);
 typedef void xf86EnableDisableFBAccessProc(ScrnInfoPtr, Bool);
 typedef int xf86SetDGAModeProc(int, int, DGADevicePtr);
-typedef int xf86ChangeGammaProc(int, Gamma);
+typedef int xf86ChangeGammaProc(ScrnInfoPtr, Gamma);
 typedef void xf86PointerMovedProc(int, int, int);
 typedef Bool xf86PMEventProc(int, pmEvent, Bool);
 typedef void xf86DPMSSetProc(ScrnInfoPtr, int, int);

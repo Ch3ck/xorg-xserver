@@ -1688,10 +1688,9 @@ gamma_to_ramp(float gamma, CARD16 *ramp, int size)
 }
 
 static int
-xf86RandR12ChangeGamma(int scrnIndex, Gamma gamma)
+xf86RandR12ChangeGamma(ScrnInfoPtr pScrn, Gamma gamma)
 {
     CARD16 *points, *red, *green, *blue;
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     RRCrtcPtr crtc = xf86CompatRRCrtc(pScrn);
     int size;
 
