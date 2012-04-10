@@ -21,7 +21,7 @@
 /* int10 info structure */
 typedef struct {
     int entityIndex;
-    int scrnIndex;
+    ScrnInfoPtr pScrn;
     pointer cpuRegs;
     CARD16 BIOSseg;
     CARD16 inb40time;

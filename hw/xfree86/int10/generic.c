@@ -89,7 +89,7 @@ xf86ExtendedInitInt10(int entityIndex, int Flags)
     pInt->mem = &genericMem;
     pInt->private = (pointer) xnfcalloc(1, sizeof(genericInt10Priv));
     INTPriv(pInt)->alloc = (pointer) xnfcalloc(1, ALLOC_ENTRIES(getpagesize()));
-    pInt->scrnIndex = pScrn->scrnIndex;
+    pInt->pScrn = pScrn;
     base = INTPriv(pInt)->base = xnfalloc(SYS_BIOS);
 
     /* FIXME: Shouldn't this be a failure case?  Leaving dev as NULL seems like
