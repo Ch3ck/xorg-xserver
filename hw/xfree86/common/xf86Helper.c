@@ -1834,3 +1834,15 @@ xf86MotionHistoryAllocate(InputInfoPtr pInfo)
 {
     AllocateMotionHistory(pInfo->dev);
 }
+
+ScrnInfoPtr
+xf86ScreenToScrn(ScreenPtr pScreen)
+{
+    return xf86Screens[pScreen->myNum];
+}
+
+ScreenPtr
+xf86ScrnToScreen(ScrnInfoPtr pScrn)
+{
+    return screenInfo.screens[pScrn->scrnIndex];
+}

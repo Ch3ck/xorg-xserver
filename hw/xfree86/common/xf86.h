@@ -449,6 +449,11 @@ xf86RandRSetNewVirtualAndDimensions(ScreenPtr pScreen,
 extern _X_EXPORT Bool
 VidModeExtensionInit(ScreenPtr pScreen);
 
+/* convert ScreenPtr to ScrnInfoPtr */
+extern _X_EXPORT ScrnInfoPtr xf86ScreenToScrn(ScreenPtr pScreen);
+/* convert ScrnInfoPtr to ScreenPtr */
+extern _X_EXPORT ScreenPtr xf86ScrnToScreen(ScrnInfoPtr pScrn);
+
 #endif                          /* _NO_XF86_PROTOTYPES */
 
 #endif                          /* _XF86_H */
