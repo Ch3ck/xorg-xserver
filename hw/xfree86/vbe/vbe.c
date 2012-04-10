@@ -1027,23 +1027,22 @@ VBEDPMSSet(vbeInfoPtr pVbe, int mode)
 }
 
 void
-VBEInterpretPanelID(int scrnIndex, struct vbePanelID *data)
+VBEInterpretPanelID(ScrnInfoPtr pScrn, struct vbePanelID *data)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     DisplayModePtr mode;
     const float PANEL_HZ = 60.0;
 
     if (!data)
         return;
 
-    xf86DrvMsg(scrnIndex, X_INFO, "PanelID returned panel resolution %dx%d\n",
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "PanelID returned panel resolution %dx%d\n",
                data->hsize, data->vsize);
 
     if (pScrn->monitor->nHsync || pScrn->monitor->nVrefresh)
         return;
 
     if (data->hsize < 320 || data->vsize < 240) {
-        xf86DrvMsg(scrnIndex, X_INFO, "...which I refuse to believe\n");
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "...which I refuse to believe\n");
         return;
     }
 
