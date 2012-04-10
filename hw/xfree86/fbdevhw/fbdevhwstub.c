@@ -131,7 +131,7 @@ fbdevHWLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 }
 
 ModeStatus
-fbdevHWValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+fbdevHWValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool verbose, int flags)
 {
     return MODE_ERROR;
 }

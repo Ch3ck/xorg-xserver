@@ -44,7 +44,7 @@ extern _X_EXPORT void fbdevHWLoadPalette(ScrnInfoPtr pScrn, int numColors,
                                          int *indices, LOCO * colors,
                                          VisualPtr pVisual);
 
-extern _X_EXPORT ModeStatus fbdevHWValidMode(int scrnIndex, DisplayModePtr mode,
+extern _X_EXPORT ModeStatus fbdevHWValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode,
                                              Bool verbose, int flags);
 extern _X_EXPORT Bool fbdevHWSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode,
                                         int flags);

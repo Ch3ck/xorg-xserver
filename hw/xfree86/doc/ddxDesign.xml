@@ -1696,7 +1696,7 @@ but their presence is optional.
 
       <blockquote><para>
 	  <programlisting>
-    ModeStatus ChipValidMode(int index, DisplayModePtr mode,
+    ModeStatus ChipValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode,
                              Bool verbose, int flags);
 	  </programlisting>
 	  <blockquote><para>

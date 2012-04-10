@@ -636,7 +636,7 @@ typedef void xf86AdjustFrameProc(ScrnInfoPtr, int, int, int);
 typedef Bool xf86EnterVTProc(ScrnInfoPtr, int);
 typedef void xf86LeaveVTProc(ScrnInfoPtr, int);
 typedef void xf86FreeScreenProc(ScrnInfoPtr, int);
-typedef ModeStatus xf86ValidModeProc(int, DisplayModePtr, Bool, int);
+typedef ModeStatus xf86ValidModeProc(ScrnInfoPtr, DisplayModePtr, Bool, int);
 typedef void xf86EnableDisableFBAccessProc(int, Bool);
 typedef int xf86SetDGAModeProc(int, int, DGADevicePtr);
 typedef int xf86ChangeGammaProc(int, Gamma);

@@ -775,10 +775,8 @@ fbdevHWLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 /* these can be hooked directly into ScrnInfoRec                        */
 
 ModeStatus
-fbdevHWValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+fbdevHWValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool verbose, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-
     if (!fbdevHWSetMode(pScrn, mode, TRUE))
         return MODE_BAD;
 
