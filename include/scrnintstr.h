@@ -95,8 +95,7 @@ typedef struct _ScreenSaverStuff {
  *  or as a local variable) can easily do so and retain full type checking.
  */
 
-typedef Bool (*CloseScreenProcPtr) (int /*index */ ,
-                                    ScreenPtr /*pScreen */ );
+typedef Bool (*CloseScreenProcPtr) (ScreenPtr /*pScreen */ );
 
 typedef void (*QueryBestSizeProcPtr) (int /*class */ ,
                                       unsigned short * /*pwidth */ ,

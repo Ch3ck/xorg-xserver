@@ -206,7 +206,7 @@ winScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
         ErrorF("winScreenInit - winFinishScreenInit () failed\n");
 
         /* call the engine dependent screen close procedure to clean up from a failure */
-        pScreenPriv->pwinCloseScreen(index, pScreen);
+        pScreenPriv->pwinCloseScreen(pScreen);
 
         return FALSE;
     }

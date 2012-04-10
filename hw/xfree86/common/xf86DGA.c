@@ -56,7 +56,7 @@ static DevPrivateKeyRec DGAScreenKeyRec;
 #define DGAScreenKeyRegistered dixPrivateKeyRegistered(&DGAScreenKeyRec)
 static Bool mieq_installed;
 
-static Bool DGACloseScreen(int i, ScreenPtr pScreen);
+static Bool DGACloseScreen(ScreenPtr pScreen);
 static void DGADestroyColormap(ColormapPtr pmap);
 static void DGAInstallColormap(ColormapPtr pmap);
 static void DGAUninstallColormap(ColormapPtr pmap);
@@ -235,7 +235,7 @@ FreeMarkedVisuals(ScreenPtr pScreen)
 }
 
 static Bool
-DGACloseScreen(int i, ScreenPtr pScreen)
+DGACloseScreen(ScreenPtr pScreen)
 {
     DGAScreenPtr pScreenPriv = DGA_GET_SCREEN_PRIV(pScreen);
 
@@ -256,7 +256,7 @@ DGACloseScreen(int i, ScreenPtr pScreen)
 
     free(pScreenPriv);
 
-    return ((*pScreen->CloseScreen) (i, pScreen));
+    return ((*pScreen->CloseScreen) (pScreen));
 }
 
 static void

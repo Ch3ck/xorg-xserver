@@ -606,7 +606,7 @@ KdCreateScreenResources(ScreenPtr pScreen)
 }
 
 Bool
-KdCloseScreen(int index, ScreenPtr pScreen)
+KdCloseScreen(ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
     KdScreenInfo *screen = pScreenPriv->screen;
@@ -616,7 +616,7 @@ KdCloseScreen(int index, ScreenPtr pScreen)
     pScreenPriv->closed = TRUE;
     pScreen->CloseScreen = pScreenPriv->CloseScreen;
     if (pScreen->CloseScreen)
-        ret = (*pScreen->CloseScreen) (index, pScreen);
+        ret = (*pScreen->CloseScreen) (pScreen);
     else
         ret = TRUE;
 

@@ -43,7 +43,7 @@ static miPointerSpriteFuncRec xf86CursorSpriteFuncs = {
 static void xf86CursorInstallColormap(ColormapPtr);
 static void xf86CursorRecolorCursor(DeviceIntPtr pDev, ScreenPtr, CursorPtr,
                                     Bool);
-static Bool xf86CursorCloseScreen(int, ScreenPtr);
+static Bool xf86CursorCloseScreen(ScreenPtr);
 static void xf86CursorQueryBestSize(int, unsigned short *, unsigned short *,
                                     ScreenPtr);
 
@@ -118,7 +118,7 @@ xf86InitCursor(ScreenPtr pScreen, xf86CursorInfoPtr infoPtr)
 /***** Screen functions *****/
 
 static Bool
-xf86CursorCloseScreen(int i, ScreenPtr pScreen)
+xf86CursorCloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     miPointerScreenPtr PointPriv =
@@ -149,7 +149,7 @@ xf86CursorCloseScreen(int i, ScreenPtr pScreen)
     free(ScreenPriv->transparentData);
     free(ScreenPriv);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 static void

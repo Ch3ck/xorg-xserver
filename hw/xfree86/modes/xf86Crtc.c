@@ -714,7 +714,7 @@ xf86CrtcCreateScreenResources(ScreenPtr screen)
  * Clean up config on server reset
  */
 static Bool
-xf86CrtcCloseScreen(int index, ScreenPtr screen)
+xf86CrtcCloseScreen(ScreenPtr screen)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
@@ -736,7 +736,7 @@ xf86CrtcCloseScreen(int index, ScreenPtr screen)
     }
     xf86RandR12CloseScreen(screen);
 
-    return screen->CloseScreen(index, screen);
+    return screen->CloseScreen(screen);
 }
 
 /*

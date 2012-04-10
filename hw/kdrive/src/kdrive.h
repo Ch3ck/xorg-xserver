@@ -442,7 +442,7 @@ Bool
  KdCreateScreenResources(ScreenPtr pScreen);
 
 Bool
- KdCloseScreen(int index, ScreenPtr pScreen);
+ KdCloseScreen(ScreenPtr pScreen);
 
 Bool
  KdSaveScreen(ScreenPtr pScreen, int on);

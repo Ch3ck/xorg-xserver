@@ -325,7 +325,7 @@ main(int argc, char *argv[], char *envp[])
             FreeScratchPixmapsForScreen(i);
             FreeGCperDepth(i);
             FreeDefaultStipple(i);
-            (*screenInfo.screens[i]->CloseScreen) (i, screenInfo.screens[i]);
+            (*screenInfo.screens[i]->CloseScreen) (screenInfo.screens[i]);
             dixFreePrivates(screenInfo.screens[i]->devPrivates, PRIVATE_SCREEN);
             free(screenInfo.screens[i]);
             screenInfo.numScreens = i;

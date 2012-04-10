@@ -365,7 +365,7 @@ xf86RandRCreateScreenResources(ScreenPtr pScreen)
  * Reset size back to original
  */
 static Bool
-xf86RandRCloseScreen(int index, ScreenPtr pScreen)
+xf86RandRCloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
@@ -376,7 +376,7 @@ xf86RandRCloseScreen(int index, ScreenPtr pScreen)
     pScreen->CloseScreen = randrp->CloseScreen;
     free(randrp);
     dixSetPrivate(&pScreen->devPrivates, xf86RandRKey, NULL);
-    return (*pScreen->CloseScreen) (index, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 Rotation

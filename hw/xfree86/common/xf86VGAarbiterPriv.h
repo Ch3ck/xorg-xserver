@@ -146,7 +146,7 @@ static void VGAarbiterBlockHandler(int i, pointer blockData, pointer pTimeout,
                                    pointer pReadmask);
 static void VGAarbiterWakeupHandler(int i, pointer blockData,
                                     unsigned long result, pointer pReadmask);
-static Bool VGAarbiterCloseScreen(int i, ScreenPtr pScreen);
+static Bool VGAarbiterCloseScreen(ScreenPtr pScreen);
 static void VGAarbiterGetImage(DrawablePtr pDrawable, int sx, int sy, int w,
                                int h, unsigned int format,
                                unsigned long planemask, char *pdstLine);

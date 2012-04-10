@@ -89,7 +89,7 @@ static DevPrivateKeyRec AnimCurScreenPrivateKeyRec;
 #define Unwrap(as,s,elt)    ((s)->elt = (as)->elt)
 
 static Bool
-AnimCurCloseScreen(int index, ScreenPtr pScreen)
+AnimCurCloseScreen(ScreenPtr pScreen)
 {
     AnimCurScreenPtr as = GetAnimCurScreen(pScreen);
     Bool ret;
@@ -103,7 +103,7 @@ AnimCurCloseScreen(int index, ScreenPtr pScreen)
     Unwrap(as, pScreen, UnrealizeCursor);
     Unwrap(as, pScreen, RecolorCursor);
     SetAnimCurScreen(pScreen, 0);
-    ret = (*pScreen->CloseScreen) (index, pScreen);
+    ret = (*pScreen->CloseScreen) (pScreen);
     free(as);
     return ret;
 }

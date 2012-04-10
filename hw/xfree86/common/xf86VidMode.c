@@ -50,7 +50,7 @@
 static DevPrivateKeyRec VidModeKeyRec;
 static DevPrivateKey VidModeKey;
 static int VidModeCount = 0;
-static Bool VidModeClose(int i, ScreenPtr pScreen);
+static Bool VidModeClose(ScreenPtr pScreen);
 
 #define VMPTR(p) ((VidModePtr)dixLookupPrivate(&(p)->devPrivates, VidModeKey))
 
@@ -93,7 +93,7 @@ VidModeExtensionInit(ScreenPtr pScreen)
 #ifdef XF86VIDMODE
 
 static Bool
-VidModeClose(int i, ScreenPtr pScreen)
+VidModeClose(ScreenPtr pScreen)
 {
     VidModePtr pVidMode = VMPTR(pScreen);
 
@@ -108,7 +108,7 @@ VidModeClose(int i, ScreenPtr pScreen)
         dixSetPrivate(&pScreen->devPrivates, VidModeKey, NULL);
         VidModeKey = NULL;
     }
-    return pScreen->CloseScreen(i, pScreen);
+    return pScreen->CloseScreen(pScreen);
 }
 
 Bool

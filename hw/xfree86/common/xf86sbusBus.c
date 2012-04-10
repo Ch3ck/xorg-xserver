@@ -666,7 +666,7 @@ xf86SbusCmapLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 }
 
 static Bool
-xf86SbusCmapCloseScreen(int i, ScreenPtr pScreen)
+xf86SbusCmapCloseScreen(ScreenPtr pScreen)
 {
     sbusCmapPtr cmap;
     struct fbcmap fbcmap;
@@ -682,7 +682,7 @@ xf86SbusCmapCloseScreen(int i, ScreenPtr pScreen)
     }
     pScreen->CloseScreen = cmap->CloseScreen;
     free(cmap);
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 Bool

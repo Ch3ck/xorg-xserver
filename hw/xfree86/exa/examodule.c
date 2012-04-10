@@ -70,7 +70,7 @@ static const OptionInfoRec EXAOptions[] = {
 };
 
 static Bool
-exaXorgCloseScreen(int i, ScreenPtr pScreen)
+exaXorgCloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = XF86SCRNINFO(pScreen);
     ExaXorgScreenPrivPtr pScreenPriv = (ExaXorgScreenPrivPtr)
@@ -83,7 +83,7 @@ exaXorgCloseScreen(int i, ScreenPtr pScreen)
     free(pScreenPriv->options);
     free(pScreenPriv);
 
-    return pScreen->CloseScreen(i, pScreen);
+    return pScreen->CloseScreen(pScreen);
 }
 
 static void

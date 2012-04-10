@@ -27,7 +27,7 @@
 
 #define MIN_OFFPIX_SIZE		(320*200)
 
-static Bool XAACloseScreen(int i, ScreenPtr pScreen);
+static Bool XAACloseScreen(ScreenPtr pScreen);
 static void XAAGetImage(DrawablePtr pDrawable, int sx, int sy, int w, int h,
                         unsigned int format, unsigned long planemask,
                         char *pdstLine);
@@ -214,7 +214,7 @@ XAAInit(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
 }
 
 static Bool
-XAACloseScreen(int i, ScreenPtr pScreen)
+XAACloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XAAScreenPtr pScreenPriv =
@@ -238,7 +238,7 @@ XAACloseScreen(int i, ScreenPtr pScreen)
 
     free((pointer) pScreenPriv);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 static void

@@ -221,7 +221,7 @@ xf86VGAarbiterWrapFunctions(void)
 
 /* Screen funcs */
 static Bool
-VGAarbiterCloseScreen(int i, ScreenPtr pScreen)
+VGAarbiterCloseScreen(ScreenPtr pScreen)
 {
     Bool val;
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
@@ -258,9 +258,9 @@ VGAarbiterCloseScreen(int i, ScreenPtr pScreen)
     UNWRAP_SPRITE;
 
     free((pointer) pScreenPriv);
-    xf86VGAarbiterLock(xf86Screens[i]);
-    val = (*pScreen->CloseScreen) (i, pScreen);
-    xf86VGAarbiterUnlock(xf86Screens[i]);
+    xf86VGAarbiterLock(xf86ScreenToScrn(pScreen));
+    val = (*pScreen->CloseScreen) (pScreen);
+    xf86VGAarbiterUnlock(xf86ScreenToScrn(pScreen));
     return val;
 }
 

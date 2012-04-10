@@ -111,7 +111,7 @@ static DevPrivateKeyRec CMapColormapKeyRec;
 
 static void CMapInstallColormap(ColormapPtr);
 static void CMapStoreColors(ColormapPtr, int, xColorItem *);
-static Bool CMapCloseScreen(int, ScreenPtr);
+static Bool CMapCloseScreen(ScreenPtr);
 static Bool CMapCreateColormap(ColormapPtr);
 static void CMapDestroyColormap(ColormapPtr);
 
@@ -241,11 +241,11 @@ xf86HandleColormaps(ScreenPtr pScreen,
 /**** Screen functions ****/
 
 static Bool
-CMapCloseScreen(int i, ScreenPtr pScreen)
+CMapCloseScreen(ScreenPtr pScreen)
 {
     CMapUnwrapScreen(pScreen);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 static Bool

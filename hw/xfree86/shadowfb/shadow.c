@@ -28,7 +28,7 @@
 
 #include "picturestr.h"
 
-static Bool ShadowCloseScreen(int i, ScreenPtr pScreen);
+static Bool ShadowCloseScreen(ScreenPtr pScreen);
 static void ShadowCopyWindow(WindowPtr pWin,
                              DDXPointRec ptOldOrg, RegionPtr prgn);
 static Bool ShadowCreateGC(GCPtr pGC);
@@ -227,7 +227,7 @@ ShadowLeaveVT(int index, int flags)
 /**********************************************************/
 
 static Bool
-ShadowCloseScreen(int i, ScreenPtr pScreen)
+ShadowCloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     ShadowScreenPtr pPriv = GET_SCREEN_PRIVATE(pScreen);
@@ -247,7 +247,7 @@ ShadowCloseScreen(int i, ScreenPtr pScreen)
 
     free((pointer) pPriv);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 static void

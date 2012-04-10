@@ -57,7 +57,7 @@
 
 /* XvScreenRec fields */
 
-static Bool xf86XVCloseScreen(int, ScreenPtr);
+static Bool xf86XVCloseScreen(ScreenPtr);
 static int xf86XVQueryAdaptors(ScreenPtr, XvAdaptorPtr *, int *);
 
 /* XvAdaptorRec fields */
@@ -1256,7 +1256,7 @@ xf86XVClipNotify(WindowPtr pWin, int dx, int dy)
 /**** Required XvScreenRec fields ****/
 
 static Bool
-xf86XVCloseScreen(int i, ScreenPtr pScreen)
+xf86XVCloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XvScreenPtr pxvs = GET_XV_SCREEN(pScreen);

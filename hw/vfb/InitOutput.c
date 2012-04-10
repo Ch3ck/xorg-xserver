@@ -760,9 +760,9 @@ static miPointerScreenFuncRec vfbPointerCursorFuncs = {
 };
 
 static Bool
-vfbCloseScreen(int index, ScreenPtr pScreen)
+vfbCloseScreen(ScreenPtr pScreen)
 {
-    vfbScreenInfoPtr pvfb = &vfbScreens[index];
+    vfbScreenInfoPtr pvfb = &vfbScreens[pScreen->myNum];
     int i;
 
     pScreen->CloseScreen = pvfb->closeScreen;
@@ -774,7 +774,7 @@ vfbCloseScreen(int index, ScreenPtr pScreen)
     for (i = 0; i < screenInfo.numScreens; i++)
         SetInstalledColormap(screenInfo.screens[i], NULL);
 
-    return pScreen->CloseScreen(index, pScreen);
+    return pScreen->CloseScreen(pScreen);
 }
 
 static Bool

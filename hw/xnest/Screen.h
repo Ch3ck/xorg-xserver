@@ -20,6 +20,6 @@ extern Window xnestScreenSaverWindows[MAXSCREENS];
 
 ScreenPtr xnestScreen(Window window);
 Bool xnestOpenScreen(int index, ScreenPtr pScreen, int argc, char *argv[]);
-Bool xnestCloseScreen(int index, ScreenPtr pScreen);
+Bool xnestCloseScreen(ScreenPtr pScreen);
 
 #endif                          /* XNESTSCREEN_H */

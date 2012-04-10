@@ -275,7 +275,7 @@ typedef void (*winShadowUpdateProcPtr) (ScreenPtr, shadowBufPtr);
 
 typedef Bool (*winInitScreenProcPtr) (ScreenPtr);
 
-typedef Bool (*winCloseScreenProcPtr) (int, ScreenPtr);
+typedef Bool (*winCloseScreenProcPtr) (ScreenPtr);
 
 typedef Bool (*winInitVisualsProcPtr) (ScreenPtr);
 

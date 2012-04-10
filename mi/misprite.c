@@ -191,7 +191,7 @@ static DevPrivateKeyRec miSpriteDevPrivatesKeyRec;
 
 #define miSpriteDevPrivatesKey (&miSpriteDevPrivatesKeyRec)
 
-static Bool miSpriteCloseScreen(int i, ScreenPtr pScreen);
+static Bool miSpriteCloseScreen(ScreenPtr pScreen);
 static void miSpriteGetImage(DrawablePtr pDrawable, int sx, int sy,
                              int w, int h, unsigned int format,
                              unsigned long planemask, char *pdstLine);
@@ -367,7 +367,7 @@ miSpriteInitialize(ScreenPtr pScreen, miPointerScreenFuncPtr screenFuncs)
  */
 
 static Bool
-miSpriteCloseScreen(int i, ScreenPtr pScreen)
+miSpriteCloseScreen(ScreenPtr pScreen)
 {
     miSpriteScreenPtr pScreenPriv = GetSpriteScreen(pScreen);
 
@@ -382,7 +382,7 @@ miSpriteCloseScreen(int i, ScreenPtr pScreen)
 
     free(pScreenPriv);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 static void

@@ -9313,16 +9313,16 @@ ZZZLeaveVT(int scrnIndex, int flags)
 
 	<programlisting>
 static Bool
-ZZZCloseScreen(int scrnIndex, ScreenPtr pScreen)
+ZZZCloseScreen(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     if (pScrn-&gt;vtSema) {
         ZZZRestore(pScrn);
         ZZZUnmapMem(pScrn);
     }
     pScrn-&gt;vtSema = FALSE;
     pScreen-&gt;CloseScreen = ZZZPTR(pScrn)-&gt;CloseScreen;
-    return (*pScreen-&gt;CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen-&gt;CloseScreen)(pScreen);
 }
 	</programlisting>
       </sect3>

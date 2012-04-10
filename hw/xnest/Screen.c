@@ -409,7 +409,7 @@ xnestOpenScreen(int index, ScreenPtr pScreen, int argc, char *argv[])
 }
 
 Bool
-xnestCloseScreen(int index, ScreenPtr pScreen)
+xnestCloseScreen(ScreenPtr pScreen)
 {
     int i;
 

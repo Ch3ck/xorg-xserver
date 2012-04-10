@@ -765,7 +765,7 @@ ExaWakeupHandler(int screenNum, pointer wakeupData, unsigned long result,
  * screen private, before calling down to the next CloseSccreen.
  */
 static Bool
-exaCloseScreen(int i, ScreenPtr pScreen)
+exaCloseScreen(ScreenPtr pScreen)
 {
     ExaScreenPriv(pScreen);
     PictureScreenPtr ps = GetPictureScreenIfSet(pScreen);
@@ -800,7 +800,7 @@ exaCloseScreen(int i, ScreenPtr pScreen)
 
     free(pExaScr);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 /**
