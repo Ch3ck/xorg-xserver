@@ -112,7 +112,7 @@ suspend(pmEvent event, Bool undo)
     sigio_blocked_for_suspend = xf86BlockSIGIO();
     for (i = 0; i < xf86NumScreens; i++) {
         if (xf86Screens[i]->PMEvent)
-            xf86Screens[i]->PMEvent(i, event, undo);
+            xf86Screens[i]->PMEvent(xf86Screens[i], event, undo);
         else {
             xf86Screens[i]->LeaveVT(xf86Screens[i], 0);
             xf86Screens[i]->vtSema = FALSE;
@@ -131,7 +131,7 @@ resume(pmEvent event, Bool undo)
     xf86AccessEnter();
     for (i = 0; i < xf86NumScreens; i++) {
         if (xf86Screens[i]->PMEvent)
-            xf86Screens[i]->PMEvent(i, event, undo);
+            xf86Screens[i]->PMEvent(xf86Screens[i], event, undo);
         else {
             xf86Screens[i]->vtSema = TRUE;
             xf86Screens[i]->EnterVT(xf86Screens[i], 0);
@@ -187,7 +187,7 @@ DoApmEvent(pmEvent event, Bool undo)
         was_blocked = xf86BlockSIGIO();
         for (i = 0; i < xf86NumScreens; i++) {
             if (xf86Screens[i]->PMEvent) {
-                xf86Screens[i]->PMEvent(i, event, undo);
+                xf86Screens[i]->PMEvent(xf86Screens[i], event, undo);
             }
         }
         xf86UnblockSIGIO(was_blocked);

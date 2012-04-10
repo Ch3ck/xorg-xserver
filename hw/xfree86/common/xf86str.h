@@ -641,7 +641,7 @@ typedef void xf86EnableDisableFBAccessProc(ScrnInfoPtr, Bool);
 typedef int xf86SetDGAModeProc(ScrnInfoPtr, int, DGADevicePtr);
 typedef int xf86ChangeGammaProc(ScrnInfoPtr, Gamma);
 typedef void xf86PointerMovedProc(int, int, int);
-typedef Bool xf86PMEventProc(int, pmEvent, Bool);
+typedef Bool xf86PMEventProc(ScrnInfoPtr, pmEvent, Bool);
 typedef void xf86DPMSSetProc(ScrnInfoPtr, int, int);
 typedef void xf86LoadPaletteProc(ScrnInfoPtr, int, int *, LOCO *, VisualPtr);
 typedef void xf86SetOverscanProc(ScrnInfoPtr, int);
