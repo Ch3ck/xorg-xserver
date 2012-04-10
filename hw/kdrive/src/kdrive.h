@@ -537,12 +537,12 @@ void
 
 void
 
-KdBlockHandler(int screen,
+KdBlockHandler(ScreenPtr pScreen,
                pointer blockData, pointer timeout, pointer readmask);
 
 void
 
-KdWakeupHandler(int screen,
+KdWakeupHandler(ScreenPtr pScreen,
                 pointer data, unsigned long result, pointer readmask);
 
 void

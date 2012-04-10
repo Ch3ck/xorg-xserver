@@ -384,7 +384,7 @@ BlockHandler(pointer pTimeout, pointer pReadmask)
 
     ++inHandler;
     for (i = 0; i < screenInfo.numScreens; i++)
-        (*screenInfo.screens[i]->BlockHandler) (i,
+        (*screenInfo.screens[i]->BlockHandler) (screenInfo.screens[i],
                                                 screenInfo.screens[i]->
                                                 blockData, pTimeout, pReadmask);
     for (i = 0; i < numHandlers; i++)
@@ -421,7 +421,7 @@ WakeupHandler(int result, pointer pReadmask)
             (*handlers[i].WakeupHandler) (handlers[i].blockData,
                                           result, pReadmask);
     for (i = 0; i < screenInfo.numScreens; i++)
-        (*screenInfo.screens[i]->WakeupHandler) (i,
+        (*screenInfo.screens[i]->WakeupHandler) (screenInfo.screens[i],
                                                  screenInfo.screens[i]->
                                                  wakeupData, result, pReadmask);
     if (handlerDeleted) {

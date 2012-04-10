@@ -257,12 +257,12 @@ typedef void (*SendGraphicsExposeProcPtr) (ClientPtr /*client */ ,
                                            int /*major */ ,
                                            int /*minor */ );
 
-typedef void (*ScreenBlockHandlerProcPtr) (int /*screenNum */ ,
+typedef void (*ScreenBlockHandlerProcPtr) (ScreenPtr /*pScreen*/ ,
                                            pointer /*blockData */ ,
                                            pointer /*pTimeout */ ,
                                            pointer /*pReadmask */ );
 
-typedef void (*ScreenWakeupHandlerProcPtr) (int /*screenNum */ ,
+typedef void (*ScreenWakeupHandlerProcPtr) (ScreenPtr /*pScreen*/ ,
                                             pointer /*wakeupData */ ,
                                             unsigned long /*result */ ,
                                             pointer /*pReadMask */ );

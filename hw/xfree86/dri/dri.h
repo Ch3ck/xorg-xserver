@@ -271,12 +271,12 @@ extern _X_EXPORT void DRIWakeupHandler(pointer wakeupData,
 extern _X_EXPORT void DRIBlockHandler(pointer blockData,
                                       OSTimePtr pTimeout, pointer pReadmask);
 
-extern _X_EXPORT void DRIDoWakeupHandler(int screenNum,
+extern _X_EXPORT void DRIDoWakeupHandler(ScreenPtr pScreen,
                                          pointer wakeupData,
                                          unsigned long result,
                                          pointer pReadmask);
 
-extern _X_EXPORT void DRIDoBlockHandler(int screenNum,
+extern _X_EXPORT void DRIDoBlockHandler(ScreenPtr pScreen,
                                         pointer blockData,
                                         pointer pTimeout, pointer pReadmask);
 

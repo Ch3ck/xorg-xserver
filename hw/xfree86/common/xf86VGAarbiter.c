@@ -265,27 +265,23 @@ VGAarbiterCloseScreen(ScreenPtr pScreen)
 }
 
 static void
-VGAarbiterBlockHandler(int i,
+VGAarbiterBlockHandler(ScreenPtr pScreen,
                        pointer blockData, pointer pTimeout, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[i];
-
     SCREEN_PROLOG(BlockHandler);
     VGAGet(pScreen);
-    pScreen->BlockHandler(i, blockData, pTimeout, pReadmask);
+    pScreen->BlockHandler(pScreen, blockData, pTimeout, pReadmask);
     VGAPut();
     SCREEN_EPILOG(BlockHandler, VGAarbiterBlockHandler);
 }
 
 static void
-VGAarbiterWakeupHandler(int i, pointer blockData, unsigned long result,
+VGAarbiterWakeupHandler(ScreenPtr pScreen, pointer blockData, unsigned long result,
                         pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[i];
-
     SCREEN_PROLOG(WakeupHandler);
     VGAGet(pScreen);
-    pScreen->WakeupHandler(i, blockData, result, pReadmask);
+    pScreen->WakeupHandler(pScreen, blockData, result, pReadmask);
     VGAPut();
     SCREEN_EPILOG(WakeupHandler, VGAarbiterWakeupHandler);
 }

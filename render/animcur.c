@@ -135,11 +135,10 @@ AnimCurCursorLimits(DeviceIntPtr pDev,
  */
 
 static void
-AnimCurScreenBlockHandler(int screenNum,
+AnimCurScreenBlockHandler(ScreenPtr pScreen,
                           pointer blockData,
                           pointer pTimeout, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
     AnimCurScreenPtr as = GetAnimCurScreen(pScreen);
     DeviceIntPtr dev;
     Bool activeDevice = FALSE;
@@ -183,7 +182,7 @@ AnimCurScreenBlockHandler(int screenNum,
         AdjustWaitForDelay(pTimeout, soonest - now);
 
     Unwrap(as, pScreen, BlockHandler);
-    (*pScreen->BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (pScreen, blockData, pTimeout, pReadmask);
     if (activeDevice)
         Wrap(as, pScreen, BlockHandler, AnimCurScreenBlockHandler);
     else

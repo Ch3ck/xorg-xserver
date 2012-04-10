@@ -1618,7 +1618,7 @@ DRIWakeupHandler(pointer wakeupData, int result, pointer pReadmask)
         DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
         if (pDRIPriv && pDRIPriv->pDriverInfo->wrap.WakeupHandler)
-            (*pDRIPriv->pDriverInfo->wrap.WakeupHandler) (i, wakeupData,
+            (*pDRIPriv->pDriverInfo->wrap.WakeupHandler) (pScreen, wakeupData,
                                                           result, pReadmask);
     }
 }
@@ -1633,16 +1633,15 @@ DRIBlockHandler(pointer blockData, OSTimePtr pTimeout, pointer pReadmask)
         DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
         if (pDRIPriv && pDRIPriv->pDriverInfo->wrap.BlockHandler)
-            (*pDRIPriv->pDriverInfo->wrap.BlockHandler) (i, blockData,
+            (*pDRIPriv->pDriverInfo->wrap.BlockHandler) (pScreen, blockData,
                                                          pTimeout, pReadmask);
     }
 }
 
 void
-DRIDoWakeupHandler(int screenNum, pointer wakeupData,
+DRIDoWakeupHandler(ScreenPtr pScreen, pointer wakeupData,
                    unsigned long result, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
     DRILock(pScreen, 0);
@@ -1658,10 +1657,9 @@ DRIDoWakeupHandler(int screenNum, pointer wakeupData,
 }
 
 void
-DRIDoBlockHandler(int screenNum, pointer blockData,
+DRIDoBlockHandler(ScreenPtr pScreen, pointer blockData,
                   pointer pTimeout, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
     if (pDRIPriv->pDriverInfo->driverSwapMethod == DRI_HIDE_X_CONTEXT) {

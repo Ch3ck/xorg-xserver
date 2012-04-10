@@ -142,9 +142,9 @@ typedef struct _VGAarbiterGC {
 } VGAarbiterGCRec, *VGAarbiterGCPtr;
 
 /* Screen funcs */
-static void VGAarbiterBlockHandler(int i, pointer blockData, pointer pTimeout,
+static void VGAarbiterBlockHandler(ScreenPtr pScreen, pointer blockData, pointer pTimeout,
                                    pointer pReadmask);
-static void VGAarbiterWakeupHandler(int i, pointer blockData,
+static void VGAarbiterWakeupHandler(ScreenPtr pScreen, pointer blockData,
                                     unsigned long result, pointer pReadmask);
 static Bool VGAarbiterCloseScreen(ScreenPtr pScreen);
 static void VGAarbiterGetImage(DrawablePtr pDrawable, int sx, int sy, int w,

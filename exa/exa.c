@@ -707,11 +707,9 @@ exaCreateScreenResources(ScreenPtr pScreen)
 }
 
 static void
-ExaBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
+ExaBlockHandler(ScreenPtr pScreen, pointer blockData, pointer pTimeout,
                 pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
-
     ExaScreenPriv(pScreen);
 
     /* Move any deferred results from a software fallback to the driver pixmap */
@@ -719,7 +717,7 @@ ExaBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
         exaMoveInPixmap_mixed(pExaScr->deferred_mixed_pixmap);
 
     unwrap(pExaScr, pScreen, BlockHandler);
-    (*pScreen->BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (pScreen, blockData, pTimeout, pReadmask);
     wrap(pExaScr, pScreen, BlockHandler, ExaBlockHandler);
 
     /* The rest only applies to classic EXA */
@@ -739,15 +737,13 @@ ExaBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
 }
 
 static void
-ExaWakeupHandler(int screenNum, pointer wakeupData, unsigned long result,
+ExaWakeupHandler(ScreenPtr pScreen, pointer wakeupData, unsigned long result,
                  pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
-
     ExaScreenPriv(pScreen);
 
     unwrap(pExaScr, pScreen, WakeupHandler);
-    (*pScreen->WakeupHandler) (screenNum, wakeupData, result, pReadmask);
+    (*pScreen->WakeupHandler) (pScreen, wakeupData, result, pReadmask);
     wrap(pExaScr, pScreen, WakeupHandler, ExaWakeupHandler);
 
     if (result == 0 && pExaScr->numOffscreenAvailable > 1) {
