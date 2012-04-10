@@ -778,9 +778,9 @@ vfbCloseScreen(ScreenPtr pScreen)
 }
 
 static Bool
-vfbScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
+vfbScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
-    vfbScreenInfoPtr pvfb = &vfbScreens[index];
+    vfbScreenInfoPtr pvfb = &vfbScreens[pScreen->myNum];
     int dpix = monitorResolution, dpiy = monitorResolution;
     int ret;
     char *pbits;

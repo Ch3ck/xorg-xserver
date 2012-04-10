@@ -3722,8 +3722,7 @@ with its screen number, a pointer to its ScreenRec, argc, and argv.
 */
 
 int
-AddScreen(Bool (*pfnInit) (int /*index */ ,
-                           ScreenPtr /*pScreen */ ,
+AddScreen(Bool (*pfnInit) (ScreenPtr /*pScreen */ ,
                            int /*argc */ ,
                            char **      /*argv */
           ), int argc, char **argv)
@@ -3791,7 +3790,7 @@ AddScreen(Bool (*pfnInit) (int /*index */ ,
      */
     screenInfo.screens[i] = pScreen;
     screenInfo.numScreens++;
-    if (!(*pfnInit) (i, pScreen, argc, argv)) {
+    if (!(*pfnInit) (pScreen, argc, argv)) {
         dixFreePrivates(pScreen->devPrivates, PRIVATE_SCREEN);
         free(pScreen);
         screenInfo.numScreens--;

@@ -776,7 +776,7 @@ KdSetSubpixelOrder(ScreenPtr pScreen, Rotation randr)
 static KdScreenInfo *kdCurrentScreen;
 
 Bool
-KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
+KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
     KdScreenInfo *screen = kdCurrentScreen;
     KdCardInfo *card = screen->card;

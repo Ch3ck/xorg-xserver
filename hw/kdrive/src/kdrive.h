@@ -448,7 +448,7 @@ Bool
  KdSaveScreen(ScreenPtr pScreen, int on);
 
 Bool
- KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv);
+ KdScreenInit(ScreenPtr pScreen, int argc, char **argv);
 
 void
 

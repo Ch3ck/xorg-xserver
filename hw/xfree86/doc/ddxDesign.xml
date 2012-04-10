@@ -9058,7 +9058,7 @@ ZZZModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
 	<programlisting>
 static Bool
-ZZZScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+ZZZScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
     /* Get the ScrnInfoRec */
     pScrn = xf86ScreenToScrn(pScreen);

@@ -630,7 +630,7 @@ typedef struct {
 
 typedef Bool xf86ProbeProc(DriverPtr, int);
 typedef Bool xf86PreInitProc(ScrnInfoPtr, int);
-typedef Bool xf86ScreenInitProc(int, ScreenPtr, int, char **);
+typedef Bool xf86ScreenInitProc(ScreenPtr, int, char **);
 typedef Bool xf86SwitchModeProc(ScrnInfoPtr, DisplayModePtr, int);
 typedef void xf86AdjustFrameProc(ScrnInfoPtr, int, int, int);
 typedef Bool xf86EnterVTProc(ScrnInfoPtr, int);
