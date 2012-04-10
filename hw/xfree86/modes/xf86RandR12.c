@@ -1596,10 +1596,9 @@ xf86RandR12TellChanged(ScreenPtr pScreen)
 }
 
 static void
-xf86RandR12PointerMoved(int scrnIndex, int x, int y)
+xf86RandR12PointerMoved(ScrnInfoPtr pScrn, int x, int y)
 {
-    ScreenPtr pScreen = screenInfo.screens[scrnIndex];
-    ScrnInfoPtr pScrn = XF86SCRNINFO(pScreen);
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     int c;

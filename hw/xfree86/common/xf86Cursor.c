@@ -66,7 +66,7 @@ static Bool xf86CursorOffScreen(ScreenPtr *pScreen, int *x, int *y);
 static void xf86CrossScreen(ScreenPtr pScreen, Bool entering);
 static void xf86WarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y);
 
-static void xf86PointerMoved(int scrnIndex, int x, int y);
+static void xf86PointerMoved(ScrnInfoPtr pScrn, int x, int y);
 
 static miPointerScreenFuncRec xf86PointerScreenFuncs = {
     xf86CursorOffScreen,
@@ -135,14 +135,13 @@ xf86SetViewport(ScreenPtr pScreen, int x, int y)
 {
     ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
 
-    (*pScr->PointerMoved) (pScreen->myNum, x, y);
+    (*pScr->PointerMoved) (pScr, x, y);
 }
 
 static void
-xf86PointerMoved(int scrnIndex, int x, int y)
+xf86PointerMoved(ScrnInfoPtr pScr, int x, int y)
 {
     Bool frameChanged = FALSE;
-    ScrnInfoPtr pScr = xf86Screens[scrnIndex];
 
     /*
      * check wether (x,y) belongs to the visual part of the screen
