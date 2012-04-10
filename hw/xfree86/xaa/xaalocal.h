@@ -50,7 +50,7 @@ typedef struct _XAAScreen {
     Bool (*EnterVT) (ScrnInfoPtr, int);
     void (*LeaveVT) (ScrnInfoPtr, int);
     int (*SetDGAMode) (int, int, DGADevicePtr);
-    void (*EnableDisableFBAccess) (int, Bool);
+    void (*EnableDisableFBAccess) (ScrnInfoPtr, Bool);
     CompositeProcPtr Composite;
     GlyphsProcPtr Glyphs;
 } XAAScreenRec, *XAAScreenPtr;

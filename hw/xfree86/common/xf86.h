@@ -256,7 +256,7 @@ extern _X_EXPORT Bool xf86SetDefaultVisual(ScrnInfoPtr scrp, int visual);
 extern _X_EXPORT Bool xf86SetGamma(ScrnInfoPtr scrp, Gamma newGamma);
 extern _X_EXPORT void xf86SetDpi(ScrnInfoPtr pScrn, int x, int y);
 extern _X_EXPORT void xf86SetBlackWhitePixels(ScreenPtr pScreen);
-extern _X_EXPORT void xf86EnableDisableFBAccess(int scrnIndex, Bool enable);
+extern _X_EXPORT void xf86EnableDisableFBAccess(ScrnInfoPtr pScrn, Bool enable);
 extern _X_EXPORT void
 xf86VDrvMsgVerb(int scrnIndex, MessageType type, int verb,
                 const char *format, va_list args)

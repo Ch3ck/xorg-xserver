@@ -515,7 +515,7 @@ xf86RandR12SetMode(ScreenPtr pScreen,
     Bool ret = TRUE;
 
     if (pRoot)
-        (*scrp->EnableDisableFBAccess) (pScreen->myNum, FALSE);
+        (*scrp->EnableDisableFBAccess) (scrp, FALSE);
     if (useVirtual) {
         scrp->virtualX = randrp->virtualX;
         scrp->virtualY = randrp->virtualY;
@@ -568,7 +568,7 @@ xf86RandR12SetMode(ScreenPtr pScreen,
     xf86SetViewport(pScreen, pScreen->width, pScreen->height);
     xf86SetViewport(pScreen, 0, 0);
     if (pRoot)
-        (*scrp->EnableDisableFBAccess) (pScreen->myNum, TRUE);
+        (*scrp->EnableDisableFBAccess) (scrp, TRUE);
     return ret;
 }
 
@@ -685,7 +685,7 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
         }
     }
     if (pRoot && pScrn->vtSema)
-        (*pScrn->EnableDisableFBAccess) (pScreen->myNum, FALSE);
+        (*pScrn->EnableDisableFBAccess) (pScrn, FALSE);
 
     /* Let the driver update virtualX and virtualY */
     if (!(*config->funcs->resize) (pScrn, width, height))
@@ -724,7 +724,7 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
     update_desktop_dimensions();
 
     if (pRoot && pScrn->vtSema)
-        (*pScrn->EnableDisableFBAccess) (pScreen->myNum, TRUE);
+        (*pScrn->EnableDisableFBAccess) (pScrn, TRUE);
 #if RANDR_12_INTERFACE
     if (xf86RandR12Key && pScreen->root && ret)
         RRScreenSizeNotify(pScreen);

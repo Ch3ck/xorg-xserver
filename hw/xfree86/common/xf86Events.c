@@ -438,7 +438,7 @@ xf86VTSwitch(void)
         for (i = 0; i < xf86NumScreens; i++) {
             if (!(dispatchException & DE_TERMINATE))
                 if (xf86Screens[i]->EnableDisableFBAccess)
-                    (*xf86Screens[i]->EnableDisableFBAccess) (i, FALSE);
+                    (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], FALSE);
         }
 
         /*
@@ -475,7 +475,7 @@ xf86VTSwitch(void)
             if (!(dispatchException & DE_TERMINATE)) {
                 for (i = 0; i < xf86NumScreens; i++) {
                     if (xf86Screens[i]->EnableDisableFBAccess)
-                        (*xf86Screens[i]->EnableDisableFBAccess) (i, TRUE);
+                        (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
                 }
             }
             dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
@@ -529,7 +529,7 @@ xf86VTSwitch(void)
         }
         for (i = 0; i < xf86NumScreens; i++) {
             if (xf86Screens[i]->EnableDisableFBAccess)
-                (*xf86Screens[i]->EnableDisableFBAccess) (i, TRUE);
+                (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
         }
 
         /* Turn screen saver off when switching back */

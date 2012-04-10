@@ -359,7 +359,7 @@ xf86SetDGAMode(int index, int num, DGADevicePtr devRet)
                 pScreenPriv->savedColormap = NULL;
             }
             pScreenPriv->dgaColormap = NULL;
-            (*pScrn->EnableDisableFBAccess) (index, TRUE);
+            (*pScrn->EnableDisableFBAccess) (pScrn, TRUE);
 
             FreeMarkedVisuals(pScreen);
         }
@@ -385,7 +385,7 @@ xf86SetDGAMode(int index, int num, DGADevicePtr devRet)
         Bool oldVTSema = pScrn->vtSema;
 
         pScrn->vtSema = FALSE;  /* kludge until we rewrite VT switching */
-        (*pScrn->EnableDisableFBAccess) (index, FALSE);
+        (*pScrn->EnableDisableFBAccess) (pScrn, FALSE);
         pScrn->vtSema = oldVTSema;
     }
 

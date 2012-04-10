@@ -102,7 +102,7 @@ suspend(pmEvent event, Bool undo)
 
     for (i = 0; i < xf86NumScreens; i++) {
         if (xf86Screens[i]->EnableDisableFBAccess)
-            (*xf86Screens[i]->EnableDisableFBAccess) (i, FALSE);
+            (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], FALSE);
     }
     pInfo = xf86InputDevs;
     while (pInfo) {
@@ -140,7 +140,7 @@ resume(pmEvent event, Bool undo)
     xf86UnblockSIGIO(sigio_blocked_for_suspend);
     for (i = 0; i < xf86NumScreens; i++) {
         if (xf86Screens[i]->EnableDisableFBAccess)
-            (*xf86Screens[i]->EnableDisableFBAccess) (i, TRUE);
+            (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
     }
     dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
     pInfo = xf86InputDevs;

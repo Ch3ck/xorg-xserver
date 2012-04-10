@@ -49,7 +49,7 @@ static void xf86CursorQueryBestSize(int, unsigned short *, unsigned short *,
 
 /* ScrnInfoRec functions */
 
-static void xf86CursorEnableDisableFBAccess(int, Bool);
+static void xf86CursorEnableDisableFBAccess(ScrnInfoPtr, Bool);
 static Bool xf86CursorSwitchMode(ScrnInfoPtr, DisplayModePtr, int);
 
 Bool
@@ -203,11 +203,11 @@ xf86CursorRecolorCursor(DeviceIntPtr pDev,
 /***** ScrnInfoRec functions *********/
 
 static void
-xf86CursorEnableDisableFBAccess(int index, Bool enable)
+xf86CursorEnableDisableFBAccess(ScrnInfoPtr pScrn, Bool enable)
 {
     DeviceIntPtr pDev = inputInfo.pointer;
 
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     xf86CursorScreenPtr ScreenPriv =
         (xf86CursorScreenPtr) dixLookupPrivate(&pScreen->devPrivates,
                                                xf86CursorScreenKey);
@@ -223,7 +223,7 @@ xf86CursorEnableDisableFBAccess(int index, Bool enable)
     }
 
     if (ScreenPriv->EnableDisableFBAccess)
-        (*ScreenPriv->EnableDisableFBAccess) (index, enable);
+        (*ScreenPriv->EnableDisableFBAccess) (pScrn, enable);
 
     if (enable && ScreenPriv->SavedCursor) {
         /*

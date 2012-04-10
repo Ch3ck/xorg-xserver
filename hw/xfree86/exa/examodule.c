@@ -87,20 +87,20 @@ exaXorgCloseScreen(ScreenPtr pScreen)
 }
 
 static void
-exaXorgEnableDisableFBAccess(int index, Bool enable)
+exaXorgEnableDisableFBAccess(ScrnInfoPtr pScrn, Bool enable)
 {
-    ScreenPtr pScreen = screenInfo.screens[index];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     ExaXorgScreenPrivPtr pScreenPriv = (ExaXorgScreenPrivPtr)
         dixLookupPrivate(&pScreen->devPrivates, exaXorgScreenPrivateKey);
 
     if (!enable)
-        exaEnableDisableFBAccess(index, enable);
+        exaEnableDisableFBAccess(pScreen, enable);
 
     if (pScreenPriv->SavedEnableDisableFBAccess)
-        pScreenPriv->SavedEnableDisableFBAccess(index, enable);
+        pScreenPriv->SavedEnableDisableFBAccess(pScrn, enable);
 
     if (enable)
-        exaEnableDisableFBAccess(index, enable);
+        exaEnableDisableFBAccess(pScreen, enable);
 }
 
 /**

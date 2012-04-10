@@ -1027,9 +1027,8 @@ xf86SetBlackWhitePixels(ScreenPtr pScreen)
  * private data, and therefore don't need to access pScrnInfo->vtSema.
  */
 void
-xf86EnableDisableFBAccess(int scrnIndex, Bool enable)
+xf86EnableDisableFBAccess(ScrnInfoPtr pScrnInfo, Bool enable)
 {
-    ScrnInfoPtr pScrnInfo = xf86Screens[scrnIndex];
     ScreenPtr pScreen = pScrnInfo->pScreen;
     PixmapPtr pspix;
 

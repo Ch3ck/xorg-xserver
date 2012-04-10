@@ -159,7 +159,7 @@ xf86RandRSetMode(ScreenPtr pScreen,
     Bool ret = TRUE;
 
     if (pRoot && scrp->vtSema)
-        (*scrp->EnableDisableFBAccess) (pScreen->myNum, FALSE);
+        (*scrp->EnableDisableFBAccess) (scrp, FALSE);
     if (useVirtual) {
         scrp->virtualX = randrp->virtualX;
         scrp->virtualY = randrp->virtualY;
@@ -220,7 +220,7 @@ xf86RandRSetMode(ScreenPtr pScreen,
     xf86SetViewport(pScreen, pScreen->width, pScreen->height);
     xf86SetViewport(pScreen, 0, 0);
     if (pRoot && scrp->vtSema)
-        (*scrp->EnableDisableFBAccess) (pScreen->myNum, TRUE);
+        (*scrp->EnableDisableFBAccess) (scrp, TRUE);
     return ret;
 }
 
