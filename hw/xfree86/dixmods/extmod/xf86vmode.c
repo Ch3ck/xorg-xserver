@@ -235,7 +235,6 @@ static int
 
      UpdateCurrentTimeIf();
      mask = XF86VidModeNotifyMask;
-     pScreen = screenInfo.screens[pScreen->myNum];
      pPriv = GetScreenPrivate(pScreen);
     if (!pPriv)
          return;
