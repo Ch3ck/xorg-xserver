@@ -38,7 +38,7 @@
 
 typedef struct _ExaXorgScreenPrivRec {
     CloseScreenProcPtr SavedCloseScreen;
-    EnableDisableFBAccessProcPtr SavedEnableDisableFBAccess;
+    xf86EnableDisableFBAccessProc *SavedEnableDisableFBAccess;
     OptionInfoPtr options;
 } ExaXorgScreenPrivRec, *ExaXorgScreenPrivPtr;
 
