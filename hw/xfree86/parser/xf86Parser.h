@@ -259,6 +259,7 @@ typedef struct {
     XF86ConfVideoAdaptorPtr al_adaptor;
 } XF86ConfAdaptorLinkRec, *XF86ConfAdaptorLinkPtr;
 
+#define MAX_PARSE_GPU 1 /* bump higher for shatter */
 typedef struct {
     GenericListRec list;
     char *scrn_identifier;
@@ -268,8 +269,9 @@ typedef struct {
     int scrn_defaultfbbpp;
     char *scrn_monitor_str;
     XF86ConfMonitorPtr scrn_monitor;
-    char *scrn_device_str;
-    XF86ConfDevicePtr scrn_device;
+    int scrn_devices_num;
+    char *scrn_devices_str[MAX_PARSE_GPU];
+    XF86ConfDevicePtr scrn_devices[MAX_PARSE_GPU];
     XF86ConfAdaptorLinkPtr scrn_adaptor_lst;
     XF86ConfDisplayPtr scrn_display_lst;
     XF86OptionPtr scrn_option_lst;

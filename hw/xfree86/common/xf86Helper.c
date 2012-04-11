@@ -1297,7 +1297,7 @@ xf86MatchDevice(const char *drivername, GDevPtr ** sectlist)
 {
     GDevPtr gdp, *pgdp = NULL;
     confScreenPtr screensecptr;
-    int i, j;
+    int i, j, k;
 
     if (sectlist)
         *sectlist = NULL;
@@ -1332,14 +1332,16 @@ xf86MatchDevice(const char *drivername, GDevPtr ** sectlist)
      */
     for (j = 0; xf86ConfigLayout.screens[j].screen != NULL; j++) {
         screensecptr = xf86ConfigLayout.screens[j].screen;
-        if ((screensecptr->device->driver != NULL)
-            && (xf86NameCmp(screensecptr->device->driver, drivername) == 0)
-            && (!screensecptr->device->claimed)) {
-            /*
-             * we have a matching driver that wasn't claimed, yet
-             */
-            pgdp = xnfrealloc(pgdp, (i + 2) * sizeof(GDevPtr));
-            pgdp[i++] = screensecptr->device;
+        for (k = 0; k < screensecptr->numdevices; k++) {
+            if ((screensecptr->devices[k]->driver != NULL)
+                && (xf86NameCmp(screensecptr->devices[k]->driver, drivername) == 0)
+                && (!screensecptr->devices[k]->claimed)) {
+                /*
+                 * we have a matching driver that wasn't claimed, yet
+                 */
+                pgdp = xnfrealloc(pgdp, (i + 2) * sizeof(GDevPtr));
+                pgdp[i++] = screensecptr->devices[k];
+            }
         }
     }
 

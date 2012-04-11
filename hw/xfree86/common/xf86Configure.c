@@ -193,9 +193,9 @@ configureScreenSection(int screennum)
     int depths[] = { 1, 4, 8, 15, 16, 24 /*, 32 */  };
     parsePrologue(XF86ConfScreenPtr, XF86ConfScreenRec)
 
-        XNFasprintf(&ptr->scrn_identifier, "Screen%d", screennum);
+    XNFasprintf(&ptr->scrn_identifier, "Screen%d", screennum);
     XNFasprintf(&ptr->scrn_monitor_str, "Monitor%d", screennum);
-    XNFasprintf(&ptr->scrn_device_str, "Card%d", screennum);
+    XNFasprintf(&ptr->scrn_devices_str[0], "Card%d", screennum);
 
     for (i = 0; i < sizeof(depths) / sizeof(depths[0]); i++) {
         XF86ConfDisplayPtr display;

@@ -429,6 +429,7 @@ typedef struct _confxvadaptrec {
     pointer options;
 } confXvAdaptorRec, *confXvAdaptorPtr;
 
+#define MAX_DEV 1 /* bump later for shatter */
 typedef struct _confscreenrec {
     char *id;
     int screennum;
@@ -436,7 +437,8 @@ typedef struct _confscreenrec {
     int defaultbpp;
     int defaultfbbpp;
     MonPtr monitor;
-    GDevPtr device;
+    int numdevices;
+    GDevPtr devices[MAX_DEV];
     int numdisplays;
     DispPtr displays;
     int numxvadaptors;

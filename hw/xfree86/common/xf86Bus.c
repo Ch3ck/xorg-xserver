@@ -107,7 +107,7 @@ Bool
 xf86BusConfig(void)
 {
     screenLayoutPtr layout;
-    int i, j;
+    int i, j, k;
 
     /* Enable full I/O access */
     if (xorgHWAccess)
@@ -164,7 +164,7 @@ xf86BusConfig(void)
                     xf86GetDevFromEntity(xf86Screens[i]->entityList[j],
                                          xf86Screens[i]->entityInstanceList[j]);
 
-                if (dev == layout->screen->device) {
+                if (dev == layout->screen->devices[0]) {
                     /* A match has been found */
                     xf86Screens[i]->confScreen = layout->screen;
                     found = TRUE;

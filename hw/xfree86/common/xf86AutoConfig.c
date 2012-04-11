@@ -313,7 +313,7 @@ copyScreen(confScreenPtr oscreen, GDevPtr odev, int i, char *driver)
     xf86ConfigLayout.screens[i].screen = nscreen;
 
     /* now associate the new driver entry with the new screen entry */
-    xf86ConfigLayout.screens[i].screen->device = cptr;
+    xf86ConfigLayout.screens[i].screen->devices[0] = cptr;
     cptr->myScreenSection = xf86ConfigLayout.screens[i].screen;
 
     return TRUE;
@@ -370,8 +370,8 @@ autoConfigDevice(GDevPtr preconf_device)
 
             /* do the first match and set that for the original first screen */
             ptr->driver = matches[0];
-            if (!xf86ConfigLayout.screens[0].screen->device) {
-                xf86ConfigLayout.screens[0].screen->device = ptr;
+            if (!xf86ConfigLayout.screens[0].screen->devices[0]) {
+                xf86ConfigLayout.screens[0].screen->devices[0] = ptr;
                 ptr->myScreenSection = xf86ConfigLayout.screens[0].screen;
             }
 
