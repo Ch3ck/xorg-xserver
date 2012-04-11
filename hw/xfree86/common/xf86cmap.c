@@ -910,7 +910,7 @@ int
 CMapChangeGamma(ScrnInfoPtr pScrn, Gamma gamma)
 {
     int ret = Success;
-    ScreenPtr pScreen = pScrn->pScreen;
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     CMapColormapPtr pColPriv;
     CMapScreenPtr pScreenPriv;
     CMapLinkPtr pLink;

@@ -1067,7 +1067,7 @@ xf86XVReputOrStopPort(XvPortRecPrivatePtr pPriv, WindowPtr pWin, Bool visible)
 static void
 xf86XVReputOrStopAllPorts(ScrnInfoPtr pScrn, Bool onlyChanged)
 {
-    ScreenPtr pScreen = pScrn->pScreen;
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XvScreenPtr pxvs = GET_XV_SCREEN(pScreen);
     XvAdaptorPtr pa;
     int c, i;
@@ -1360,7 +1360,7 @@ xf86XVLeaveVT(ScrnInfoPtr pScrn, int flags)
 static void
 xf86XVAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
-    ScreenPtr pScreen = pScrn->pScreen;
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XF86XVScreenPtr ScreenPriv = GET_XF86XV_SCREEN(pScreen);
 
     if (ScreenPriv->AdjustFrame) {
@@ -1375,7 +1375,7 @@ xf86XVAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int flags)
 static void
 xf86XVModeSet(ScrnInfoPtr pScrn)
 {
-    ScreenPtr pScreen = pScrn->pScreen;
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     XF86XVScreenPtr ScreenPriv;
 
     /* Can be called before pScrn->pScreen is set */
