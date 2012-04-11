@@ -133,7 +133,7 @@ xf86InitViewport(ScrnInfoPtr pScr)
 void
 xf86SetViewport(ScreenPtr pScreen, int x, int y)
 {
-    ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
 
     (*pScr->PointerMoved) (pScr, x, y);
 }
@@ -183,7 +183,8 @@ xf86PointerMoved(ScrnInfoPtr pScr, int x, int y)
 void
 xf86LockZoom(ScreenPtr pScreen, Bool lock)
 {
-    XF86SCRNINFO(pScreen)->zoomLocked = lock;
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
+    pScr->zoomLocked = lock;
 }
 
 /*
@@ -195,7 +196,7 @@ xf86LockZoom(ScreenPtr pScreen, Bool lock)
 Bool
 xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
 {
-    ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
     ScreenPtr pCursorScreen;
     Bool Switched;
     int px, py, was_blocked;
@@ -315,7 +316,7 @@ xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
 void
 xf86ZoomViewport(ScreenPtr pScreen, int zoom)
 {
-    ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
     DisplayModePtr mode;
 
     if (pScr->zoomLocked || !(mode = pScr->currentMode))
