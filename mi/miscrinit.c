@@ -230,7 +230,10 @@ miScreenInit(ScreenPtr pScreen, pointer pbits,  /* pointer to screen bits */
     pScreen->saveUnderSupport = NotUseful;
     /* whitePixel, blackPixel */
     pScreen->ModifyPixmapHeader = miModifyPixmapHeader;
-    pScreen->CreateScreenResources = miCreateScreenResources;
+    if (pScreen->isDrv)
+        pScreen->CreateScreenResources = NoopDDA;
+    else
+        pScreen->CreateScreenResources = miCreateScreenResources;
     pScreen->GetScreenPixmap = miGetScreenPixmap;
     pScreen->SetScreenPixmap = miSetScreenPixmap;
     pScreen->numVisuals = numVisuals;

@@ -41,17 +41,29 @@ impedCreateScreenResources(ScreenPtr pScreen)
 {
     ScreenPtr iter;
     Bool ret = TRUE;
+    int i;
+    PixmapPtr pPixmap;
     xorg_list_init(&pScreen->gc_list);
     xorg_list_init(&pScreen->pixmap_list);
     xorg_list_init(&pScreen->picture_list);
+
+    ret = miCreateScreenResources(pScreen);
+    if (!ret)
+	return ret;
+
+
+    /* have to fixup the screen pixmap linkages */
+    pPixmap = pScreen->GetScreenPixmap(pScreen);
+    i = 0;
+    xorg_list_for_each_entry(iter, &pScreen->gpu_screen_list, gpu_screen_head) {
+	iter->SetScreenPixmap(pPixmap->gpu[i]);
+	i++;
+    }
 
     xorg_list_for_each_entry(iter, &pScreen->gpu_screen_list, gpu_screen_head) {
 	ret = iter->CreateScreenResources(iter);
     }
 
-    ret = miCreateScreenResources(pScreen);
-    if (!ret)
-	return ret;
 
     return ret;
 }
