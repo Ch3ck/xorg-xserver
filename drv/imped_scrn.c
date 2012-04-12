@@ -17,6 +17,13 @@
 #include "mi.h"
 #include "micmap.h"
 
+#define impedWindowEnabled(pWin) \
+    RegionNotEmpty(&(pWin)->drawable.pScreen->root->borderClip)
+
+#define impedDrawableEnabled(pDrawable) \
+    ((pDrawable)->type == DRAWABLE_PIXMAP ? \
+     TRUE : impedWindowEnabled((WindowPtr) pDrawable))
+
 static DevPrivateKeyRec impedWinPrivateKeyRec;
 static DevPrivateKey
 impedGetWinPrivateKey (void)
@@ -56,7 +63,7 @@ impedCreateScreenResources(ScreenPtr pScreen)
     pPixmap = pScreen->GetScreenPixmap(pScreen);
     i = 0;
     xorg_list_for_each_entry(iter, &pScreen->gpu_screen_list, gpu_screen_head) {
-	iter->SetScreenPixmap(pPixmap->gpu[i]);
+	iter->omghack = pPixmap->gpu[i];
 	i++;
     }
 
@@ -104,7 +111,30 @@ impedUnmapWindow(WindowPtr pWindow)
 static void
 impedCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
 {
+    ScreenPtr pScreen = pWin->drawable.pScreen;
+    PixmapPtr pPixmap = pScreen->GetWindowPixmap(pWin);
+    RegionRec   rgnDst;
+    int dx, dy;
 
+    dx = ptOldOrg.x - pWin->drawable.x;
+    dy = ptOldOrg.y - pWin->drawable.y;
+    RegionTranslate(prgnSrc, -dx, -dy);
+    RegionNull(&rgnDst);
+    RegionIntersect(&rgnDst, &pWin->borderClip, prgnSrc);
+#ifdef COMPOSITE
+    if (pPixmap->screen_x || pPixmap->screen_y) {
+        int xoff = 0, yoff = 0;
+
+        xoff = -pPixmap->screen_x;
+        yoff = -pPixmap->screen_y;
+        RegionTranslate(&rgnDst, xoff, yoff);
+    }
+#endif
+
+    miCopyRegion(&pWin->drawable, &pWin->drawable, NULL,
+                 &rgnDst, dx, dy, impedCopyNtoN, 0, 0);
+
+    RegionUninit(&rgnDst);
 }
 
 static Bool
@@ -135,7 +165,21 @@ impedGetImage (DrawablePtr          pDrawable,
                unsigned long   planeMask,
                char         *d)
 {
+    ScreenPtr pScreen = pDrawable->pScreen;
+    RegionRec img_region;
+    PixmapPtr pPixmap = GetDrawablePixmap(pDrawable);
+    int x_off, y_off;
 
+    if (!impedDrawableEnabled(pDrawable))
+        return;
+
+    impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
+    x += x_off;
+    y += y_off;
+
+    pScreen->gpu[0]->GetImage(&pPixmap->gpu[0]->drawable, x, y, w, h,
+			      format, planeMask, d);
+    /* TODO shatter*/
 }
 
 static void
@@ -168,7 +212,7 @@ impedCreatePixmap (ScreenPtr pScreen, int width, int height, int depth,
     pPixmap->drawable.y = 0;
     pPixmap->drawable.width = width;
     pPixmap->drawable.height = height;
-    pPixmap->devKind = width;
+    pPixmap->devKind = (width * (BitsPerPixel(depth)/8));
     pPixmap->refcnt = 1;
 
 #ifdef COMPOSITE
@@ -194,26 +238,47 @@ static Bool
 impedModifyPixmapHeader(PixmapPtr pPixmap, int w, int h, int d,
                         int bpp, int devKind, pointer pPixData)
 {
+    ScreenPtr iter;
+    int i;
+    if (!pPixmap)
+	return FALSE;
+
+    miModifyPixmapHeader(pPixmap, w, h, d, bpp, devKind, pPixData);
+
+    i = 0;
+    xorg_list_for_each_entry(iter, &pPixmap->drawable.pScreen->gpu_screen_list, gpu_screen_head) {
+	iter->ModifyPixmapHeader(pPixmap->gpu[i], w, h, d, bpp, devKind, pPixData);
+    }
     return TRUE;
 }
+
 static void
 impedQueryBestSize (int class, 
                     unsigned short *width, unsigned short *height,
                     ScreenPtr pScreen)
 {
-
+    pScreen->gpu[0]->QueryBestSize(class, width, height, pScreen->gpu[0]);
 }
 
 static RegionPtr
 impedBitmapToRegion(PixmapPtr pPix)
 {
-    return NULL;
+    return pPix->drawable.pScreen->gpu[0]->BitmapToRegion(pPix->gpu[0]);
 }
 
 static Bool
 impedDestroyPixmap(PixmapPtr pPixmap)
 {
-    return FALSE;
+    int i;
+    ScreenPtr pScreen = pPixmap->drawable.pScreen;
+    if (--pPixmap->refcnt)
+	return TRUE;
+
+    for (i = 0; i < pScreen->num_gpu; i++) {
+	pScreen->gpu[i]->DestroyPixmap(pPixmap->gpu[i]);
+    }
+    FreePixmap(pPixmap);
+    return TRUE;
 }
 
 Bool

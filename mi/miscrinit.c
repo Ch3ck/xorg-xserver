@@ -148,10 +148,13 @@ miCreateScreenResources(ScreenPtr pScreen)
         /* create a pixmap with no data, then redirect it to point to
          * the screen
          */
-        pPixmap =
-            (*pScreen->CreatePixmap) (pScreen, 0, 0, pScreen->rootDepth, 0);
-        if (!pPixmap)
-            return FALSE;
+        if (!pScreen->isDrv) {
+            pPixmap =
+                (*pScreen->CreatePixmap) (pScreen, 0, 0, pScreen->rootDepth, 0);
+            if (!pPixmap)
+                return FALSE;
+        } else
+            pPixmap = pScreen->omghack;
 
         if (!(*pScreen->ModifyPixmapHeader) (pPixmap, pScreen->width,
                                              pScreen->height,
@@ -230,10 +233,7 @@ miScreenInit(ScreenPtr pScreen, pointer pbits,  /* pointer to screen bits */
     pScreen->saveUnderSupport = NotUseful;
     /* whitePixel, blackPixel */
     pScreen->ModifyPixmapHeader = miModifyPixmapHeader;
-    if (pScreen->isDrv)
-        pScreen->CreateScreenResources = NoopDDA;
-    else
-        pScreen->CreateScreenResources = miCreateScreenResources;
+    pScreen->CreateScreenResources = miCreateScreenResources;
     pScreen->GetScreenPixmap = miGetScreenPixmap;
     pScreen->SetScreenPixmap = miSetScreenPixmap;
     pScreen->numVisuals = numVisuals;

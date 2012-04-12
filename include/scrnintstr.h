@@ -517,6 +517,7 @@ typedef struct _Screen {
 
     GetCopyAreaFunctionProcPtr GetCopyAreaFunction;
     GetCopyPlaneFunctionProcPtr GetCopyPlaneFunction;
+    PixmapPtr omghack;
 } ScreenRec;
 
 static inline RegionPtr

@@ -47,6 +47,19 @@ impedDetachAllSlaves(ScreenPtr pScreen);
 extern _X_EXPORT void
 impedMigrateOutputSlaves(ScreenPtr pOldMaster, ScreenPtr pNewMaster);
 
+extern _X_EXPORT void
+impedCopyNtoN (DrawablePtr	pSrcDrawable,
+	       DrawablePtr	pDstDrawable,
+	       GCPtr	pGC,
+	       BoxPtr	pbox,
+	       int		nbox,
+	       int		dx,
+	       int		dy,
+	       Bool	reverse,
+	       Bool	upsidedown,
+	       Pixel	bitplane,
+	       void	*closure);
+
 static inline void impedGetDrawableDeltas(DrawablePtr pDrawable, PixmapPtr pPixmap,
                                           int *x_off, int *y_off)
 {

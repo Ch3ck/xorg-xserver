@@ -227,6 +227,8 @@ fbFinishScreenInit(ScreenPtr pScreen,
 			   &defaultVisual, ((unsigned long) 1 << (imagebpp - 1)),
 			   8))
 	    return FALSE;
+    } else {
+        rootdepth = 32; // HACK THE GIBSON
     }
     if (!miScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width,
 		      rootdepth, ndepths, depths,
