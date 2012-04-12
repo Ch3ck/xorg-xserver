@@ -88,6 +88,7 @@ extern _X_EXPORT int xf86NumDrivers;
 extern _X_EXPORT Bool xf86Resetting;
 extern _X_EXPORT Bool xf86Initialising;
 extern _X_EXPORT int xf86NumScreens;
+extern _X_EXPORT int xf86NumGPUScreens;
 extern _X_EXPORT const char *xf86VisualNames[];
 extern _X_EXPORT int xf86Verbose;       /* verbosity level */
 extern _X_EXPORT int xf86LogVerbose;    /* log file verbosity level */
@@ -160,7 +161,7 @@ xf86SetVerbosity(int verb);
 extern _X_EXPORT int
 xf86SetLogVerbosity(int verb);
 extern _X_EXPORT Bool
-xf86CallDriverProbe(struct _DriverRec *drv, Bool detect_only);
+xf86CallDriverProbe(struct _DriverRec *drv, Bool detect_only, Bool v2_probe);
 extern _X_EXPORT Bool
 xf86PrivsElevated(void);
 

@@ -26,7 +26,15 @@
 #ifndef HOTPLUG_H
 #define HOTPLUG_H
 
+extern _X_EXPORT void config_pre_init(void);
 extern _X_EXPORT void config_init(void);
 extern _X_EXPORT void config_fini(void);
+
+#ifdef CONFIG_UDEV
+int config_udev_output_probe(void);
+int AddOutputDevice(struct udev_device *udev_device);
+void RemoveOutputDevice(struct udev_device *udev_device);
+struct udev_monitor *config_udev_monitor(void);
+#endif
 
 #endif                          /* HOTPLUG_H */

@@ -1063,7 +1063,7 @@ xf86ConfigActivePciEntity(ScrnInfoPtr pScrn, int entityIndex,
     return TRUE;
 }
 
-static int
+int
 videoPtrToDriverList(struct pci_device *dev,
                      char *returnList[], int returnListMax)
 {

@@ -206,10 +206,17 @@ main(int argc, char *argv[], char *envp[])
             FatalError("no screens found");
         InitExtensions(argc, argv);
 
+        for (i = 0; i < screenInfo.numGPUScreens; i++) {
+            ScreenPtr pScreen = screenInfo.gpuscreens[i];
+
+            if (!CreateScratchPixmapsForScreen(pScreen))
+                FatalError("failed to create scratch pixmaps");
+	}
+
         for (i = 0; i < screenInfo.numScreens; i++) {
             ScreenPtr pScreen = screenInfo.screens[i];
 
-            if (!CreateScratchPixmapsForScreen(i))
+            if (!CreateScratchPixmapsForScreen(pScreen))
                 FatalError("failed to create scratch pixmaps");
             if (pScreen->CreateScreenResources &&
                 !(*pScreen->CreateScreenResources) (pScreen))

@@ -91,6 +91,8 @@ static Bool HardEdges;
 void
 xf86InitViewport(ScrnInfoPtr pScr)
 {
+    if (!pScr->modes)
+        return;
 
     pScr->PointerMoved = xf86PointerMoved;
 

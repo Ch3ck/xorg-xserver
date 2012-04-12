@@ -119,6 +119,12 @@ fixupScreens(FixupFunc fixup, unsigned bytes)
             (&screenInfo.screens[s]->devPrivates, keys[PRIVATE_SCREEN].offset,
              bytes))
             return FALSE;
+
+    for (s = 0; s < screenInfo.numGPUScreens; s++)
+        if (!fixup
+            (&screenInfo.gpuscreens[s]->devPrivates, keys[PRIVATE_SCREEN].offset,
+             bytes))
+            return FALSE;
     return TRUE;
 }
 

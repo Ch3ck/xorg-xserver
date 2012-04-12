@@ -318,6 +318,7 @@ cat > sdksyms.c << EOF
 #include "xkbrules.h"
 #include "xserver-properties.h"
 
+#include "imped.h"
 EOF
 
 topdir=$1

@@ -3804,3 +3804,89 @@ AddScreen(Bool (*pfnInit) (ScreenPtr /*pScreen */ ,
 
     return i;
 }
+
+
+int
+AddGPUScreen(Bool (*pfnInit) (ScreenPtr /*pScreen */ ,
+                              int /*argc */ ,
+                              char **      /*argv */
+                              ),
+             int argc, char **argv)
+{
+    int i;
+    int scanlinepad, format, depth, bitsPerPixel, j, k;
+    ScreenPtr pScreen;
+
+    i = screenInfo.numGPUScreens;
+    if (i == MAXSCREENS)
+        return -1;
+
+    pScreen = (ScreenPtr) calloc(1, sizeof(ScreenRec));
+    if (!pScreen)
+        return -1;
+
+    if (!dixAllocatePrivates(&pScreen->devPrivates, PRIVATE_SCREEN)) {
+        free(pScreen);
+        return -1;
+    }
+    pScreen->myNum = i + 16;
+    pScreen->totalPixmapSize = 0;       /* computed in CreateScratchPixmapForScreen */
+    pScreen->ClipNotify = 0;    /* for R4 ddx compatibility */
+    pScreen->CreateScreenResources = 0;
+    pScreen->isDrv = TRUE;
+
+    /*
+     * This loop gets run once for every Screen that gets added,
+     * but thats ok.  If the ddx layer initializes the formats
+     * one at a time calling AddScreen() after each, then each
+     * iteration will make it a little more accurate.  Worst case
+     * we do this loop N * numPixmapFormats where N is # of screens.
+     * Anyway, this must be called after InitOutput and before the
+     * screen init routine is called.
+     */
+    for (format = 0; format < screenInfo.numPixmapFormats; format++) {
+        depth = screenInfo.formats[format].depth;
+        bitsPerPixel = screenInfo.formats[format].bitsPerPixel;
+        scanlinepad = screenInfo.formats[format].scanlinePad;
+        j = indexForBitsPerPixel[bitsPerPixel];
+        k = indexForScanlinePad[scanlinepad];
+        PixmapWidthPaddingInfo[depth].padPixelsLog2 = answer[j][k];
+        PixmapWidthPaddingInfo[depth].padRoundUp =
+            (scanlinepad / bitsPerPixel) - 1;
+        j = indexForBitsPerPixel[8];    /* bits per byte */
+        PixmapWidthPaddingInfo[depth].padBytesLog2 = answer[j][k];
+        PixmapWidthPaddingInfo[depth].bitsPerPixel = bitsPerPixel;
+        if (answerBytesPerPixel[bitsPerPixel]) {
+            PixmapWidthPaddingInfo[depth].notPower2 = 1;
+            PixmapWidthPaddingInfo[depth].bytesPerPixel =
+                answerBytesPerPixel[bitsPerPixel];
+        }
+        else {
+            PixmapWidthPaddingInfo[depth].notPower2 = 0;
+        }
+    }
+
+    /* This is where screen specific stuff gets initialized.  Load the
+       screen structure, call the hardware, whatever.
+       This is also where the default colormap should be allocated and
+       also pixel values for blackPixel, whitePixel, and the cursor
+       Note that InitScreen is NOT allowed to modify argc, argv, or
+       any of the strings pointed to by argv.  They may be passed to
+       multiple screens.
+     */
+    screenInfo.gpuscreens[i] = pScreen;
+    screenInfo.numGPUScreens++;
+    if (!(*pfnInit) (pScreen, argc, argv)) {
+        dixFreePrivates(pScreen->devPrivates, PRIVATE_SCREEN);
+        free(pScreen);
+        screenInfo.numGPUScreens--;
+        return -1;
+    }
+
+    update_desktop_dimensions();
+
+    dixRegisterScreenPrivateKey(&cursorScreenDevPriv, pScreen, PRIVATE_CURSOR,
+                                0);
+
+    return i;
+}

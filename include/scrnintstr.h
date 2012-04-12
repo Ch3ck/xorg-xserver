@@ -56,6 +56,10 @@ SOFTWARE.
 #include "dix.h"
 #include "privates.h"
 
+#define ROLE_MASTER 0x1
+#define ROLE_SLAVE_OFFLOAD 0x2
+#define ROLE_SLAVE_OUTPUT 0x4
+
 typedef struct _PixmapFormat {
     unsigned char depth;
     unsigned char bitsPerPixel;
@@ -480,6 +484,30 @@ typedef struct _Screen {
      * malicious users to steal framebuffer's content if that would be the
      * default */
     Bool canDoBGNoneRoot;
+
+    Bool isDrv;
+    /* subscreen lists - master gpus, offload gpus, output gpus, unattached gpus */
+    struct xorg_list gpu_screen_list;
+    struct xorg_list offload_slave_list;
+    struct xorg_list output_slave_list;
+    struct xorg_list unattached_list;
+  
+    /* subscreen list attachment points */
+    struct xorg_list gpu_screen_head;
+    struct xorg_list offload_head;
+    struct xorg_list output_head;
+    struct xorg_list unattached_head;
+
+    /* object lists */
+    struct xorg_list gc_list;
+    struct xorg_list pixmap_list;
+    struct xorg_list picture_list;
+
+    uint32_t roles;
+    ScreenPtr protocol_master;
+    ScreenPtr master;
+    ScreenPtr offload_master;
+    ScreenPtr output_master;
 } ScreenRec;
 
 static inline RegionPtr
@@ -494,9 +522,11 @@ typedef struct _ScreenInfo {
     int bitmapScanlinePad;
     int bitmapBitOrder;
     int numPixmapFormats;
-     PixmapFormatRec formats[MAXFORMATS];
+    PixmapFormatRec formats[MAXFORMATS];
     int numScreens;
     ScreenPtr screens[MAXSCREENS];
+    int numGPUScreens;
+    ScreenPtr gpuscreens[MAXSCREENS];
     int x;                      /* origin */
     int y;                      /* origin */
     int width;                  /* total width of all screens together */

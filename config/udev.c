@@ -85,6 +85,18 @@ device_added(struct udev_device *udev_device)
     if (!SeatId && strcmp(dev_seat, "seat0"))
         return;
 
+    if (!strcmp(udev_device_get_subsystem(udev_device), "drm")) {
+        const char *sysname = udev_device_get_sysname(udev_device);
+
+        if (strncmp(sysname, "card", 4))
+            return;
+
+        LogMessage(X_INFO, "config/udev: Adding drm device (%s)\n",
+               path);
+        AddOutputDevice(udev_device);
+        return;
+    }
+
     if (!udev_device_get_property_value(udev_device, "ID_INPUT")) {
         LogMessageVerb(X_INFO, 10,
                        "config/udev: ignoring device %s without "
@@ -240,6 +252,17 @@ device_removed(struct udev_device *device)
     char *value;
     const char *syspath = udev_device_get_syspath(device);
 
+    if (!strcmp(udev_device_get_subsystem(device), "drm")) {
+        const char *sysname = udev_device_get_sysname(device);
+        
+        if (strncmp(sysname,"card", 4))
+            return;
+
+        ErrorF("removing output device %s\n", syspath);
+        RemoveOutputDevice(device);
+        return;
+    }
+
     if (asprintf(&value, "udev:%s", syspath) == -1)
         return;
 
@@ -281,12 +304,9 @@ block_handler(pointer data, struct timeval **tv, pointer read_mask)
 }
 
 int
-config_udev_init(void)
+config_udev_pre_init(void)
 {
     struct udev *udev;
-    struct udev_enumerate *enumerate;
-    struct udev_list_entry *devices, *device;
-
     udev = udev_new();
     if (!udev)
         return 0;
@@ -297,6 +317,7 @@ config_udev_init(void)
     udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, "input",
                                                     NULL);
     udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, "tty", NULL); /* For Wacom serial devices */
+    udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, "drm", NULL); /* For Wacom serial devices */
 
 #ifdef HAVE_UDEV_MONITOR_FILTER_ADD_MATCH_TAG
     if (SeatId && strcmp(SeatId, "seat0"))
@@ -307,13 +328,24 @@ config_udev_init(void)
         ErrorF("config/udev: failed to bind the udev monitor\n");
         return 0;
     }
+    return 1;
+}
 
+int
+config_udev_init(void)
+{
+    struct udev *udev;
+    struct udev_enumerate *enumerate;
+    struct udev_list_entry *devices, *device;
+
+    udev = udev_monitor_get_udev(udev_monitor);
     enumerate = udev_enumerate_new(udev);
     if (!enumerate)
         return 0;
 
     udev_enumerate_add_match_subsystem(enumerate, "input");
     udev_enumerate_add_match_subsystem(enumerate, "tty");
+    udev_enumerate_add_match_subsystem(enumerate, "drm");
 
 #ifdef HAVE_UDEV_ENUMERATE_ADD_MATCH_TAG
     if (SeatId && strcmp(SeatId, "seat0"))
@@ -357,4 +389,10 @@ config_udev_fini(void)
     udev_monitor_unref(udev_monitor);
     udev_monitor = NULL;
     udev_unref(udev);
+}
+
+struct udev_monitor *
+config_udev_monitor(void)
+{
+    return udev_monitor;
 }

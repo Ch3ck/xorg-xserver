@@ -131,6 +131,12 @@ fbSetupScreen(ScreenPtr pScreen, pointer pbits, /* pointer to screen bitmap */
     return TRUE;
 }
 
+static Bool
+fakeCreateScreenResources(ScreenPtr pScreen)
+{
+    return TRUE;
+}
+
 #ifdef FB_ACCESS_WRAPPER
 Bool
 wfbFinishScreenInit(ScreenPtr pScreen,
@@ -202,14 +208,17 @@ fbFinishScreenInit(ScreenPtr pScreen,
     fbGetScreenPrivate(pScreen)->finishWrap = finishWrap;
 #endif
     rootdepth = 0;
-    if (!fbInitVisuals(&visuals, &depths, &nvisuals, &ndepths, &rootdepth,
-                       &defaultVisual, ((unsigned long) 1 << (imagebpp - 1)),
-                       8))
-        return FALSE;
+    if (!pScreen->isDrv) {
+	if (!fbInitVisuals(&visuals, &depths, &nvisuals, &ndepths, &rootdepth,
+			   &defaultVisual, ((unsigned long) 1 << (imagebpp - 1)),
+			   8))
+	    return FALSE;
+    }
     if (!miScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width,
-                      rootdepth, ndepths, depths,
-                      defaultVisual, nvisuals, visuals))
-        return FALSE;
+		      rootdepth, ndepths, depths,
+		      defaultVisual, nvisuals, visuals))
+	return FALSE;
+
     /* overwrite miCloseScreen with our own */
     pScreen->CloseScreen = fbCloseScreen;
     if (bpp == 24 && imagebpp == 32) {

@@ -73,12 +73,15 @@ BusRec primaryBus = { BUS_NONE, {0} };
  * returned.  Otherwise, \c FALSE is returned.
  */
 Bool
-xf86CallDriverProbe(DriverPtr drv, Bool detect_only)
+xf86CallDriverProbe(DriverPtr drv, Bool detect_only, Bool drv_v2)
 {
     Bool foundScreen = FALSE;
 
+    if (drv_v2) {
+        foundScreen = xf86udevProbeDev(drv);
+    }
 #ifdef XSERVER_LIBPCIACCESS
-    if (drv->PciProbe != NULL) {
+    if (foundScreen == FALSE && drv->PciProbe != NULL) {
         if (xf86DoConfigure && xf86DoConfigurePass1) {
             assert(detect_only);
             foundScreen = xf86PciAddMatchingDev(drv);
@@ -90,10 +93,12 @@ xf86CallDriverProbe(DriverPtr drv, Bool detect_only)
     }
 #endif
     if (!foundScreen && (drv->Probe != NULL)) {
-        xf86Msg(X_WARNING, "Falling back to old probe method for %s\n",
-                drv->driverName);
-        foundScreen = (*drv->Probe) (drv, (detect_only) ? PROBE_DETECT
-                                     : PROBE_DEFAULT);
+        int flags;
+        xf86Msg(X_WARNING, "Falling back to old probe method for %s: ver %d\n",
+                drv->driverName, drv_v2 ? 2 : 1);
+        flags = drv_v2 ? PROBE_DRV_V2 : 0;
+        flags |= detect_only ? PROBE_DETECT : PROBE_DEFAULT;
+        foundScreen = (*drv->Probe) (drv, flags);
     }
 
     return foundScreen;
@@ -120,21 +125,33 @@ xf86BusConfig(void)
      */
     for (i = 0; i < xf86NumDrivers; i++) {
         xorgHWFlags flags;
+        Bool v2probe = FALSE, need_hw_access = TRUE;
+        Bool ret;
+
+        if (xf86DriverList[i]->driverFunc) {
+            ret = xf86DriverList[i]->driverFunc(NULL,
+                                                GET_REQUIRED_HW_INTERFACES,
+                                                &flags);
+            if (ret && !NEED_IO_ENABLED(flags))
+                need_hw_access = FALSE;
+
+            ret = xf86DriverList[i]->driverFunc(NULL,
+                                                GET_DRV_MODEL_V2_SUPPORT,
+                                                &flags);
+            if (ret)
+                v2probe = TRUE;
+        }
 
         if (!xorgHWAccess) {
-            if (!xf86DriverList[i]->driverFunc
-                || !xf86DriverList[i]->driverFunc(NULL,
-                                                  GET_REQUIRED_HW_INTERFACES,
-                                                  &flags)
-                || NEED_IO_ENABLED(flags))
+            if (need_hw_access == TRUE)
                 continue;
         }
 
-        xf86CallDriverProbe(xf86DriverList[i], FALSE);
+        xf86CallDriverProbe(xf86DriverList[i], FALSE, v2probe);
     }
 
     /* If nothing was detected, return now */
-    if (xf86NumScreens == 0) {
+    if (xf86NumScreens == 0 && xf86NumGPUScreens == 0) {
         xf86Msg(X_ERROR, "No devices detected.\n");
         return FALSE;
     }
@@ -183,8 +200,39 @@ xf86BusConfig(void)
         }
     }
 
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+	for (layout = xf86ConfigLayout.screens; layout->screen != NULL;
+             layout++) {
+            Bool found = FALSE;
+
+            for (j = 0; j < xf86GPUScreens[i]->numEntities; j++) {
+                GDevPtr dev = xf86GetDevFromEntity(xf86GPUScreens[i]->entityList[j],
+                                                   xf86GPUScreens[i]->entityInstanceList[j]);
+                for (k = 0; k < layout->screen->numdevices; k++) {
+                    if (dev == layout->screen->devices[k]) {
+                        /* A match has been found */
+                        xf86GPUScreens[i]->confScreen = layout->screen;
+                        found = TRUE;
+                        break;
+                    }
+                    if (found)
+                        break;
+                }
+            }
+            if (found)
+                break;
+        }
+        if (layout->screen == NULL) {
+            /* No match found */
+            xf86Msg(X_ERROR,
+                    "GPU Screen %d deleted because no matching config section.\n");
+            xf86DeleteGPUScreen(xf86GPUScreens[i--], 0);
+        }
+    }
+                           
+
     /* If no screens left, return now.  */
-    if (xf86NumScreens == 0) {
+    if (xf86NumScreens == 0 && xf86NumGPUScreens == 0) {
         xf86Msg(X_ERROR,
                 "Device(s) detected, but none match those in the config file.\n");
         return FALSE;

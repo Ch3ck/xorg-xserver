@@ -65,6 +65,7 @@ extern _X_EXPORT DevPrivateKeyRec xf86CreateRootWindowKeyRec;
 #define xf86CreateRootWindowKey (&xf86CreateRootWindowKeyRec)
 
 extern _X_EXPORT ScrnInfoPtr *xf86Screens;      /* List of pointers to ScrnInfoRecs */
+extern _X_EXPORT ScrnInfoPtr *xf86GPUScreens;
 extern _X_EXPORT const unsigned char byte_reversed[256];
 extern _X_EXPORT Bool fbSlotClaimed;
 
@@ -242,7 +243,9 @@ extern _X_EXPORT void xf86AddDriver(DriverPtr driver, pointer module,
                                     int flags);
 extern _X_EXPORT void xf86DeleteDriver(int drvIndex);
 extern _X_EXPORT ScrnInfoPtr xf86AllocateScreen(DriverPtr drv, int flags);
+extern _X_EXPORT ScrnInfoPtr xf86AllocateGPUScreen(DriverPtr drv, int flags);
 extern _X_EXPORT void xf86DeleteScreen(int scrnIndex, int flags);
+extern _X_EXPORT void xf86DeleteGPUScreen(int scrnIndex, int flags);
 extern _X_EXPORT int xf86AllocateScrnInfoPrivateIndex(void);
 extern _X_EXPORT Bool xf86AddPixFormat(ScrnInfoPtr pScrn, int depth, int bpp,
                                        int pad);

@@ -80,6 +80,8 @@ typedef struct _Pixmap {
     short screen_y;
 #endif
     unsigned usage_hint;        /* see CREATE_PIXMAP_USAGE_* */
+    PixmapPtr parent;
+    struct xorg_list member;
 } PixmapRec;
 
 #endif                          /* PIXMAPSTRUCT_H */

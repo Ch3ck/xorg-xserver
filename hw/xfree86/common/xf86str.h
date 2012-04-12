@@ -256,7 +256,8 @@ typedef enum {
     RR_GET_INFO,
     RR_SET_CONFIG,
     RR_GET_MODE_MM,
-    GET_REQUIRED_HW_INTERFACES = 10
+    GET_REQUIRED_HW_INTERFACES = 10,
+    GET_DRV_MODEL_V2_SUPPORT = 11
 } xorgDriverFuncOp;
 
 typedef Bool xorgDriverFuncProc(ScrnInfoPtr, xorgDriverFuncOp, pointer);
@@ -311,6 +312,7 @@ struct _SymTabRec;
 struct _PciChipsets;
 
 struct pci_device;
+struct xf86_udev_device;
 
 typedef struct _DriverRec {
     int driverVersion;
@@ -325,6 +327,8 @@ typedef struct _DriverRec {
     const struct pci_id_match *supported_devices;
     Bool (*PciProbe) (struct _DriverRec * drv, int entity_num,
                       struct pci_device * dev, intptr_t match_data);
+    Bool (*UdevProbe) (struct _DriverRec *drv, int entity_num,
+		       struct xf86_udev_device *dev);
 } DriverRec, *DriverPtr;
 
 /*
@@ -343,6 +347,7 @@ typedef struct _DriverRec {
 #undef BUS_NONE
 #undef BUS_PCI
 #undef BUS_SBUS
+#undef BUS_UDEV
 #undef BUS_last
 #endif
 
@@ -350,6 +355,7 @@ typedef enum {
     BUS_NONE,
     BUS_PCI,
     BUS_SBUS,
+    BUS_UDEV,
     BUS_last                    /* Keep last */
 } BusType;
 
@@ -362,6 +368,7 @@ typedef struct _bus {
     union {
         struct pci_device *pci;
         SbusBusId sbus;
+	struct xf86_udev_device *udev;
     } id;
 } BusRec, *BusPtr;
 
@@ -625,6 +632,7 @@ typedef struct {
 #define PROBE_DEFAULT	  0x00
 #define PROBE_DETECT	  0x01
 #define PROBE_TRYHARD	  0x02
+#define PROBE_DRV_V2      0x04
 
 /*
  * Driver entry point types

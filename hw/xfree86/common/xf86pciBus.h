@@ -41,5 +41,6 @@ int xf86PciMatchDriver(char *matches[], int nmatches);
 Bool xf86PciConfigure(void *busData, struct pci_device *pDev);
 void xf86PciConfigureNewDev(void *busData, struct pci_device *pVideo,
                             GDevRec * GDev, int *chipset);
-
+int videoPtrToDriverList(struct pci_device *dev,
+                     char *returnList[], int returnListMax);
 #endif                          /* _XF86_PCI_BUS_H */

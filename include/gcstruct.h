@@ -287,6 +287,8 @@ typedef struct _GC {
     PixmapPtr pRotatedPixmap;   /* tile/stipple rotated for alignment */
     RegionPtr pCompositeClip;
     /* fExpose & freeCompClip defined above */
+
+    struct xorg_list member;
 } GC;
 
 #endif                          /* GCSTRUCT_H */

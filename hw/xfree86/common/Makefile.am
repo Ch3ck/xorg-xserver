@@ -22,9 +22,13 @@ if DGA
 DGASOURCES = xf86DGA.c
 endif
 
+if CONFIG_UDEV
+UDEV_SOURCES = xf86udev.c
+endif
+
 RANDRSOURCES = xf86RandR.c
 
-BUSSOURCES = xf86fbBus.c xf86noBus.c $(PCI_SOURCES) $(SBUS_SOURCES)
+BUSSOURCES = xf86fbBus.c xf86noBus.c $(PCI_SOURCES) $(SBUS_SOURCES) $(UDEV_SOURCES)
 
 MODEDEFSOURCES = $(srcdir)/vesamodes $(srcdir)/extramodes
 
@@ -37,7 +41,7 @@ BUILT_SOURCES = xf86DefModeSet.c
 AM_LDFLAGS = -r
 libcommon_la_SOURCES = xf86Configure.c xf86Bus.c xf86Config.c \
                       xf86Cursor.c $(DGASOURCES) xf86DPMS.c \
-                      xf86Events.c xf86Globals.c xf86AutoConfig.c \
+                      xf86DrvHelper.c xf86Events.c xf86Globals.c xf86AutoConfig.c \
                       xf86Option.c xf86Init.c \
                       xf86VidMode.c xf86fbman.c xf86cmap.c \
                       xf86Helper.c xf86PM.c xf86Xinput.c xisb.c \
@@ -50,7 +54,7 @@ INCLUDES = $(XORG_INCS) -I$(srcdir)/../ddc -I$(srcdir)/../i2c \
 	   -I$(srcdir)/../loader -I$(srcdir)/../parser \
            -I$(srcdir)/../vbe -I$(srcdir)/../int10 \
 	   -I$(srcdir)/../vgahw -I$(srcdir)/../dixmods/extmod \
-	   -I$(srcdir)/../modes -I$(srcdir)/../ramdac
+	   -I$(srcdir)/../modes -I$(srcdir)/../ramdac @LIBDRM_CFLAGS@
 
 sdk_HEADERS = compiler.h fourcc.h xf86.h xf86Module.h xf86Opt.h \
               xf86PciInfo.h xf86Priv.h xf86Privstr.h \

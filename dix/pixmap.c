@@ -84,16 +84,15 @@ FreeScratchPixmapHeader(PixmapPtr pPixmap)
 }
 
 Bool
-CreateScratchPixmapsForScreen(int scrnum)
+CreateScratchPixmapsForScreen(ScreenPtr pScreen)
 {
     unsigned int pixmap_size;
 
     pixmap_size = sizeof(PixmapRec) + dixPrivatesSize(PRIVATE_PIXMAP);
-    screenInfo.screens[scrnum]->totalPixmapSize =
-        BitmapBytePad(pixmap_size * 8);
+    pScreen->totalPixmapSize = BitmapBytePad(pixmap_size * 8);
 
     /* let it be created on first use */
-    screenInfo.screens[scrnum]->pScratchPixmap = NULL;
+    pScreen->pScratchPixmap = NULL;
     return TRUE;
 }
 

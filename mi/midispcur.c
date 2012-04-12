@@ -104,6 +104,8 @@ miDCInitialize(ScreenPtr pScreen, miPointerScreenFuncPtr screenFuncs)
 {
     miDCScreenPtr pScreenPriv;
 
+    if (pScreen->isDrv)
+        return TRUE;
     if (!dixRegisterPrivateKey(&miDCScreenKeyRec, PRIVATE_SCREEN, 0) ||
         !dixRegisterScreenPrivateKey(&miDCCursorBitsKeyRec, pScreen,
                                      PRIVATE_CURSOR_BITS, 0) ||

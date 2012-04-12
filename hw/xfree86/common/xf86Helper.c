@@ -183,36 +183,52 @@ xf86AllocateScreen(DriverPtr drv, int flags)
      * xf86Screens[i]->EnableDisableFBAccess = xf86EnableDisableFBAccess;
      */
 
-    xf86Screens[i]->drv = drv;
-    drv->refCount++;
-    xf86Screens[i]->module = DuplicateModule(drv->module, NULL);
+    if (drv) {
+        xf86Screens[i]->drv = drv;
+        drv->refCount++;
+        xf86Screens[i]->module = DuplicateModule(drv->module, NULL);
 
-    xf86Screens[i]->DriverFunc = drv->driverFunc;
+        xf86Screens[i]->DriverFunc = drv->driverFunc;
+    }
 
     return xf86Screens[i];
 }
 
-/*
- * Remove an entry from xf86Screens.  Ideally it should free all allocated
- * data.  To do this properly may require a driver hook.
- */
 
-void
-xf86DeleteScreen(int scrnIndex, int flags)
+ScrnInfoPtr
+xf86AllocateGPUScreen(DriverPtr drv, int flags)
 {
-    ScrnInfoPtr pScrn;
     int i;
 
-    /* First check if the screen is valid */
-    if (xf86NumScreens == 0 || xf86Screens == NULL)
-        return;
+    if (xf86GPUScreens == NULL)
+        xf86NumGPUScreens = 0;
 
-    if (scrnIndex > xf86NumScreens - 1)
-        return;
+    i = xf86NumGPUScreens++;
+    xf86GPUScreens = xnfrealloc(xf86GPUScreens, xf86NumGPUScreens * sizeof(ScrnInfoPtr));
+    xf86GPUScreens[i] = xnfcalloc(sizeof(ScrnInfoRec), 1);
+    xf86GPUScreens[i]->scrnIndex = i;      /* Changes when a screen is removed */
+    xf86GPUScreens[i]->origIndex = i;      /* This never changes */
+    xf86GPUScreens[i]->privates = xnfcalloc(sizeof(DevUnion),
+                                         xf86ScrnInfoPrivateCount);
+    /*
+     * EnableDisableFBAccess now gets initialized in InitOutput()
+     * xf86GPUScreens[i]->EnableDisableFBAccess = xf86EnableDisableFBAccess;
+     */
 
-    if (!(pScrn = xf86Screens[scrnIndex]))
-        return;
+    xf86GPUScreens[i]->drv = drv;
+    drv->refCount++;
+    xf86GPUScreens[i]->module = DuplicateModule(drv->module, NULL);
 
+    xf86GPUScreens[i]->DriverFunc = drv->driverFunc;
+
+    return xf86GPUScreens[i];
+}
+
+
+/* common screen delete path */
+static void
+delete_screen_common(ScrnInfoPtr pScrn)
+{
     /* If a FreeScreen function is defined, call it here */
     if (pScrn->FreeScreen != NULL)
         pScrn->FreeScreen(pScrn, 0);
@@ -233,17 +249,68 @@ xf86DeleteScreen(int scrnIndex, int flags)
 
     free(pScrn->privates);
 
-    xf86ClearEntityListForScreen(scrnIndex);
-
     free(pScrn);
 
-    /* Move the other entries down, updating their scrnIndex fields */
+}
+/*
+ * Remove an entry from xf86Screens.  Ideally it should free all allocated
+ * data.  To do this properly may require a driver hook.
+ */
+void
+xf86DeleteScreen(int scrnIndex, int flags)
+{
+    ScrnInfoPtr pScrn;
+    int i;
 
+    /* First check if the screen is valid */
+    if (xf86NumScreens == 0 || xf86Screens == NULL)
+        return;
+
+    if (scrnIndex > xf86NumScreens - 1)
+        return;
+
+    if (!(pScrn = xf86Screens[scrnIndex]))
+        return;
+
+    delete_screen_common(pScrn);
+
+    xf86ClearEntityListForScreen(scrnIndex);
+
+    /* Move the other entries down, updating their scrnIndex fields */
     xf86NumScreens--;
 
     for (i = scrnIndex; i < xf86NumScreens; i++) {
         xf86Screens[i] = xf86Screens[i + 1];
         xf86Screens[i]->scrnIndex = i;
+        /* Also need to take care of the screen layout settings */
+    }
+}
+
+void
+xf86DeleteGPUScreen(int scrnIndex, int flags)
+{
+    ScrnInfoPtr pScrn;
+    int i;
+
+    /* First check if the screen is valid */
+    if (xf86NumGPUScreens == 0 || xf86GPUScreens == NULL)
+        return;
+
+    if (scrnIndex > xf86NumGPUScreens - 1)
+        return;
+
+    if (!(pScrn = xf86GPUScreens[scrnIndex]))
+        return;
+
+    delete_screen_common(pScrn);
+
+    //    xf86ClearEntityListForScreen(scrnIndex);
+    /* Move the other entries down, updating their scrnIndex fields */
+    xf86NumGPUScreens--;
+
+    for (i = scrnIndex; i < xf86NumGPUScreens; i++) {
+        xf86GPUScreens[i] = xf86GPUScreens[i + 1];
+        xf86GPUScreens[i]->scrnIndex = i;
         /* Also need to take care of the screen layout settings */
     }
 }
@@ -1839,6 +1906,9 @@ xf86MotionHistoryAllocate(InputInfoPtr pInfo)
 ScrnInfoPtr
 xf86ScreenToScrn(ScreenPtr pScreen)
 {
+    if (pScreen->myNum >= 16)
+        return xf86GPUScreens[pScreen->myNum - 16];
+
     return xf86Screens[pScreen->myNum];
 }
 

@@ -580,7 +580,7 @@ DoConfigure(void)
                 continue;
         }
 
-        found_screen = xf86CallDriverProbe(drv, TRUE);
+        found_screen = xf86CallDriverProbe(drv, TRUE, FALSE);
         if (found_screen && drv->Identify) {
             (*drv->Identify) (0);
         }
@@ -670,7 +670,7 @@ DoConfigure(void)
 
             oldNumScreens = xf86NumScreens;
 
-            xf86CallDriverProbe(xf86DriverList[i], FALSE);
+            xf86CallDriverProbe(xf86DriverList[i], FALSE, FALSE);
 
             /* reorder */
             k = screennum > 0 ? screennum : 1;

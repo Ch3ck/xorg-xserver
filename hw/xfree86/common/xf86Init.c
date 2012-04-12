@@ -405,6 +405,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 
     xf86Initialising = TRUE;
 
+    config_pre_init();
     if (serverGeneration == 1) {
         if ((xf86ServerName = strrchr(argv[0], '/')) != 0)
             xf86ServerName++;
@@ -578,6 +579,19 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             xf86Screens[i]->scrnIndex = i;
         }
 
+        for (i = 0; i < xf86NumGPUScreens; i++) {
+            if (xf86GPUScreens[i]->PreInit &&
+                xf86GPUScreens[i]->PreInit(xf86GPUScreens[i], 0))
+                xf86GPUScreens[i]->configured = TRUE;
+        }
+        for (i = 0; i < xf86NumGPUScreens; i++) {
+            if (!xf86GPUScreens[i]->configured)
+                xf86DeleteGPUScreen(i--, 0);
+        }
+
+        //        if (xf86NumGPUScreens)
+        //  impedInit();
+
         /*
          * Call the driver's PreInit()'s to complete initialisation for the first
          * generation.
@@ -599,7 +613,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
          * If no screens left, return now.
          */
 
-        if (xf86NumScreens == 0) {
+        if (xf86NumScreens == 0 && xf86NumGPUScreens == 0) {
             xf86Msg(X_ERROR,
                     "Screen(s) found, but none have a usable configuration.\n");
             return;
@@ -622,6 +636,16 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
         /*
          * At this stage we know how many screens there are.
          */
+        if (xf86NumGPUScreens > 0) {
+            int total_proto_screens = -1;
+            for (i = 0; i < xf86NumGPUScreens; i++) {
+                if (xf86GPUScreens[i]->confScreen->screennum > total_proto_screens)
+                    total_proto_screens = xf86GPUScreens[i]->confScreen->screennum;
+            }
+            total_proto_screens++;
+            for (i = 0; i < total_proto_screens; i++)
+                xf86HelperAddProtoScreens(i);
+        }
 
         for (i = 0; i < xf86NumScreens; i++)
             xf86InitViewport(xf86Screens[i]);
@@ -820,6 +844,19 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
         !dixRegisterPrivateKey(&xf86CreateRootWindowKeyRec, PRIVATE_SCREEN, 0))
         FatalError("Cannot register DDX private keys");
 
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        scr_index = AddGPUScreen(xf86GPUScreens[i]->ScreenInit, argc, argv);
+        if (scr_index == i) {
+            xf86GPUScreens[i]->pScreen = screenInfo.gpuscreens[i];
+            dixSetPrivate(&xf86GPUScreens[i]->pScreen->devPrivates,
+                          xf86ScreenKey, xf86GPUScreens[i]);
+
+            xf86GPUScreens[i]->vtSema = TRUE;
+        } else {
+            FatalError("AddScreen/ScreenInit failed for driver %d\n", i);
+        }
+    }
+
     for (i = 0; i < xf86NumScreens; i++) {
         xf86VGAarbiterLock(xf86Screens[i]);
         /*
@@ -863,7 +900,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
                       xf86Screens[i]->pScreen->CreateWindow);
         xf86Screens[i]->pScreen->CreateWindow = xf86CreateRootWindow;
 
-        if (PictureGetSubpixelOrder(xf86Screens[i]->pScreen) == SubPixelUnknown) {
+        if (PictureGetSubpixelOrder(xf86Screens[i]->pScreen) == SubPixelUnknown && xf86Screens[i]->monitor) {
             xf86MonPtr DDC = (xf86MonPtr) (xf86Screens[i]->monitor->DDC);
 
             PictureSetSubpixelOrder(xf86Screens[i]->pScreen,

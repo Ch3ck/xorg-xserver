@@ -276,6 +276,8 @@ miCreateDefColormap(ScreenPtr pScreen)
     ColormapPtr cmap;
     int alloctype;
 
+    if (pScreen->isDrv)
+        return TRUE;
     if (!dixRegisterPrivateKey(&micmapScrPrivateKeyRec, PRIVATE_SCREEN, 0))
         return FALSE;
 

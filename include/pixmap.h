@@ -54,6 +54,7 @@ SOFTWARE.
 #define DRAWABLE_WINDOW 0
 #define DRAWABLE_PIXMAP 1
 #define UNDRAWABLE_WINDOW 2
+#define DRAWABLE_DRV_PIXMAP 3
 
 /* corresponding type masks for dixLookupDrawable() */
 #define M_DRAWABLE_WINDOW	(1<<0)
@@ -100,7 +101,7 @@ extern _X_EXPORT PixmapPtr GetScratchPixmapHeader(ScreenPtr /*pScreen */ ,
 
 extern _X_EXPORT void FreeScratchPixmapHeader(PixmapPtr /*pPixmap */ );
 
-extern _X_EXPORT Bool CreateScratchPixmapsForScreen(int /*scrnum */ );
+extern _X_EXPORT Bool CreateScratchPixmapsForScreen(ScreenPtr /*pScreen */ );
 
 extern _X_EXPORT void FreeScratchPixmapsForScreen(int /*scrnum */ );
 
