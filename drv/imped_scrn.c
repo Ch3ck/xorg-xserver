@@ -329,6 +329,7 @@ impedAttachScreen(ScreenPtr pScreen, ScreenPtr slave)
 {
     xorg_list_add(&slave->gpu_screen_head, &pScreen->gpu_screen_list);
     slave->protocol_master = pScreen;
+    pScreen->gpu[pScreen->num_gpu] = slave;
     pScreen->num_gpu++;
 }
 

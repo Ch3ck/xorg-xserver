@@ -79,8 +79,6 @@ impedValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
     for (i = 0; i < pGC->pScreen->num_gpu; i++) {
 	pDrvGC = pGC->gpu[i];
 
-        //	SyncDrvGC(pGC, pDrvGC, i);
-
 	pDrvGC->funcs->ValidateGC(pDrvGC, changes, &pPixmap->gpu[i]->drawable);
     }
 #ifdef COMPOSITE
@@ -197,6 +195,7 @@ static void impedModChildGC(GCPtr pGC, GCPtr pChild, int index, unsigned long ma
         }
     }            
 }
+
 static void impedChangeGC(GCPtr pGC, unsigned long mask)
 {
     unsigned long maskQ;
@@ -624,7 +623,6 @@ impedImageGlyphBlt (DrawablePtr	pDrawable,
 						ppciInit, pglyphBase));
 }
 
-#if 0
 void
 impedCopyNtoN (DrawablePtr	pSrcDrawable,
 	       DrawablePtr	pDstDrawable,
@@ -638,13 +636,13 @@ impedCopyNtoN (DrawablePtr	pSrcDrawable,
 	       Pixel	bitplane,
 	       void	*closure)
 {
-    drvCopyProc copy;
+    miCopyProc copy;
     int src_x_off, src_y_off;
     int dst_x_off, dst_y_off;
     PixmapPtr pSrcPixmap = (PixmapPtr)GetDrawablePixmap(pSrcDrawable);
     PixmapPtr pDstPixmap = (PixmapPtr)GetDrawablePixmap(pDstDrawable);
     int i;
-    DrvGCPtr pDrvGC = NULL;
+    GCPtr pDrvGC = NULL;
 
     impedGetCompositeDeltas(pSrcDrawable, pSrcPixmap, &src_x_off, &src_y_off);
     impedGetCompositeDeltas(pDstDrawable, pDstPixmap, &dst_x_off, &dst_y_off);
@@ -663,12 +661,11 @@ impedCopyNtoN (DrawablePtr	pSrcDrawable,
 	}
     }
 
-    for (i = 0; i < imped_src_screen->num_gpu; i++) {
-	copy = imped_src_screen->gpu[i]->GetCopyAreaFunction(imped_src_pixmap->gpu[i], imped_dst_pixmap->gpu[i]);
+    for (i = 0; i < pSrcDrawable->pScreen->num_gpu; i++) {
+	copy = pSrcDrawable->pScreen->gpu[i]->GetCopyAreaFunction(&pSrcPixmap->drawable, &pDstPixmap->drawable);
 
 	if (pGC) {
-	    impedGCPrivPtr imped_gc = impedGetGC(pGC);
-	    pDrvGC = imped_gc->gpu[i];
+	    pDrvGC = pGC->gpu[i];
 	}
     
 	copy(pSrcPixmap->gpu[i], pDstPixmap->gpu[i],
@@ -677,7 +674,7 @@ impedCopyNtoN (DrawablePtr	pSrcDrawable,
     }
 
 }
-#endif
+
 static RegionPtr
 impedCopyArea (DrawablePtr	pSrcDrawable,
 	       DrawablePtr	pDstDrawable,
@@ -689,8 +686,6 @@ impedCopyArea (DrawablePtr	pSrcDrawable,
 	       int		xOut, 
 	       int		yOut)
 {
-    return NULL;
-#if 0
     return miDoCopy(pSrcDrawable,
 		    pDstDrawable,
 		    pGC, xIn, yIn,
@@ -699,8 +694,8 @@ impedCopyArea (DrawablePtr	pSrcDrawable,
 		    xOut,
 		    yOut,
 		    impedCopyNtoN, 0, 0);
-#endif
 }
+
 #if 0
 static void
 impedCopyPlaneNtoN (DrawablePtr	pSrcDrawable,
@@ -739,6 +734,7 @@ impedCopyPlaneNtoN (DrawablePtr	pSrcDrawable,
     }
 
 }
+#endif
 
 static RegionPtr
 impedCopyPlane (DrawablePtr	pSrcDrawable,
@@ -752,12 +748,13 @@ impedCopyPlane (DrawablePtr	pSrcDrawable,
 	    int		yOut,
 	    unsigned long bitplane)
 {
-    drvCopyProc copy;
+  //    drvCopyProc copy;
     PixmapPtr pSrcPixmap, pDstPixmap;
 
     pSrcPixmap = GetDrawablePixmap(pSrcDrawable);
     pDstPixmap = GetDrawablePixmap(pDstDrawable);
 
+#if 0
     copy = imped_src_screen->gpu[0]->GetCopyPlaneFunction(imped_src_pixmap->gpu[0],
 							 imped_dst_pixmap->gpu[0], bitplane);
 
@@ -771,13 +768,13 @@ impedCopyPlane (DrawablePtr	pSrcDrawable,
 			yOut,
 			impedCopyPlaneNtoN, (Pixel)bitplane, 0);
     else
+#endif
 	return miHandleExposures(pSrcDrawable, pDstDrawable, pGC,
                                  xIn, yIn,
                                  widthSrc,
                                  heightSrc,
                                  xOut, yOut, bitplane);
 }
-#endif
 
 static void
 impedPushPixels (GCPtr	    pGC,
@@ -805,7 +802,7 @@ const GCOps impedGCOps = {
     impedSetSpans,
     impedPutImage,
     impedCopyArea,
-    NULL,//impedCopyPlane,
+    impedCopyPlane,
     impedPolyPoint,
     impedPolyLines,
     impedPolySegment,

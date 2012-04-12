@@ -55,6 +55,7 @@ SOFTWARE.
 #include <X11/Xproto.h>
 #include "dix.h"
 #include "privates.h"
+#include "mi.h"
 
 #define ROLE_MASTER 0x1
 #define ROLE_SLAVE_OFFLOAD 0x2
@@ -345,6 +346,9 @@ typedef void (*DeviceCursorCleanupProcPtr) (DeviceIntPtr /* pDev */ ,
 typedef void (*ConstrainCursorHarderProcPtr) (DeviceIntPtr, ScreenPtr, int,
                                               int *, int *);
 
+typedef miCopyProc (*GetCopyAreaFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
+typedef miCopyProc (*GetCopyPlaneFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
+
 typedef struct _Screen {
     int myNum;                  /* index of this instance in Screens[] */
     ATOM id;
@@ -488,7 +492,7 @@ typedef struct _Screen {
     Bool isDrv;
     int num_gpu;
     /* subscreen lists - master gpus, offload gpus, output gpus, unattached gpus */
-    ScreenPtr gpus[MAXGPU];
+    ScreenPtr gpu[MAXGPU];
     struct xorg_list gpu_screen_list;
     struct xorg_list offload_slave_list;
     struct xorg_list output_slave_list;
@@ -510,6 +514,9 @@ typedef struct _Screen {
     ScreenPtr master;
     ScreenPtr offload_master;
     ScreenPtr output_master;
+
+    GetCopyAreaFunctionProcPtr GetCopyAreaFunction;
+    GetCopyPlaneFunctionProcPtr GetCopyPlaneFunction;
 } ScreenRec;
 
 static inline RegionPtr
