@@ -289,6 +289,8 @@ typedef struct _GC {
     /* fExpose & freeCompClip defined above */
 
     struct xorg_list member;
+    GCPtr parent;
+    GCPtr gpu[MAXGPU];
 } GC;
 
 #endif                          /* GCSTRUCT_H */

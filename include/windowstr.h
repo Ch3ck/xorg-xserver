@@ -56,6 +56,7 @@ SOFTWARE.
 #include "dix.h"
 #include "privates.h"
 #include "miscstruct.h"
+#include "scrnintstr.h"
 #include <X11/Xprotostr.h>
 #include "opaque.h"
 
@@ -217,5 +218,15 @@ typedef struct _ScreenSaverStuff *ScreenSaverStuffPtr;
 #define HasSaverWindow(pScreen)   (pScreen->screensaver.pWindow != NullWindow)
 
 extern _X_EXPORT int screenIsSaved;
+
+static inline PixmapPtr GetDrawablePixmap(DrawablePtr drawable)
+{
+    if (drawable->type == DRAWABLE_PIXMAP)
+        return (PixmapPtr)drawable;
+    else {
+        struct _Window *pWin = (struct _Window *)drawable;
+        return drawable->pScreen->GetWindowPixmap(pWin);
+    }
+}
 
 #endif                          /* WINDOWSTRUCT_H */

@@ -82,6 +82,28 @@ typedef struct _Pixmap {
     unsigned usage_hint;        /* see CREATE_PIXMAP_USAGE_* */
     PixmapPtr parent;
     struct xorg_list member;
+    PixmapPtr gpu[MAXGPU];
+    Bool shattered;
 } PixmapRec;
+
+static inline void
+PixmapBox(BoxPtr box, PixmapPtr pixmap)
+{
+    box->x1 = 0;//pixmap->shattered_x;
+    box->x2 = /* pixmap->shattered_x + */ pixmap->drawable.width;
+
+    box->y1 = 0; /*pixmap->shattered_y;*/
+    box->y2 = /*pixmap->shattered_y + */ pixmap->drawable.height;
+}
+
+
+static inline void
+PixmapRegionInit(RegionPtr region, PixmapPtr pixmap)
+{
+    BoxRec box;
+
+    PixmapBox(&box, pixmap);
+    RegionInit(region, &box, 1);
+}
 
 #endif                          /* PIXMAPSTRUCT_H */

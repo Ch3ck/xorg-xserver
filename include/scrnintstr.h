@@ -486,7 +486,9 @@ typedef struct _Screen {
     Bool canDoBGNoneRoot;
 
     Bool isDrv;
+    int num_gpu;
     /* subscreen lists - master gpus, offload gpus, output gpus, unattached gpus */
+    ScreenPtr gpus[MAXGPU];
     struct xorg_list gpu_screen_list;
     struct xorg_list offload_slave_list;
     struct xorg_list output_slave_list;

@@ -101,6 +101,9 @@ extern _X_EXPORT int ChangeGC(ClientPtr /*client */ ,
                               BITS32 /*mask */ ,
                               ChangeGCValPtr /*pCGCV */ );
 
+/* create a bare GC object */
+extern _X_EXPORT GCPtr NewGCObject(ScreenPtr pScreen, int depth);
+
 extern _X_EXPORT GCPtr CreateGC(DrawablePtr /*pDrawable */ ,
                                 BITS32 /*mask */ ,
                                 XID * /*pval */ ,
