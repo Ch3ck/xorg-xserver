@@ -133,4 +133,6 @@ extern _X_EXPORT GlyphSetPtr AllocateGlyphSet(int fdepth, PictFormatPtr format);
 extern _X_EXPORT int
  FreeGlyphSet(pointer value, XID gid);
 
+extern _X_EXPORT PicturePtr
+GetGlyphPicture(GlyphPtr glyph, ScreenPtr pScreen);
 #endif                          /* _GLYPHSTR_H_ */

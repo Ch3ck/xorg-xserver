@@ -638,7 +638,7 @@ miGlyphs(CARD8 op,
         n = list->len;
         while (n--) {
             glyph = *glyphs++;
-            pPicture = GlyphPicture(glyph)[pScreen->myNum];
+            pPicture = GetGlyphPicture(glyph, pScreen);
 
             if (pPicture) {
                 if (maskFormat) {
@@ -684,3 +684,18 @@ miGlyphs(CARD8 op,
         (*pScreen->DestroyPixmap) (pMaskPixmap);
     }
 }
+
+PicturePtr GetGlyphPicture(GlyphPtr glyph, ScreenPtr pScreen)
+{
+    PicturePtr pict;
+    int i;
+    if (!pScreen->protocol_master)
+        return GlyphPicture(glyph)[pScreen->myNum];
+   
+    pict = GlyphPicture(glyph)[pScreen->protocol_master->myNum];
+    for (i = 0; i < pScreen->protocol_master->myNum; i++)
+        if (pScreen == pScreen->protocol_master->gpu[i])
+            return pict->gpu[i];
+    return NULL;
+}
+
