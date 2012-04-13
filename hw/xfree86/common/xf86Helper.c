@@ -206,7 +206,7 @@ xf86AllocateGPUScreen(DriverPtr drv, int flags)
     i = xf86NumGPUScreens++;
     xf86GPUScreens = xnfrealloc(xf86GPUScreens, xf86NumGPUScreens * sizeof(ScrnInfoPtr));
     xf86GPUScreens[i] = xnfcalloc(sizeof(ScrnInfoRec), 1);
-    xf86GPUScreens[i]->scrnIndex = i;      /* Changes when a screen is removed */
+    xf86GPUScreens[i]->scrnIndex = i + 16;      /* Changes when a screen is removed */
     xf86GPUScreens[i]->origIndex = i;      /* This never changes */
     xf86GPUScreens[i]->privates = xnfcalloc(sizeof(DevUnion),
                                          xf86ScrnInfoPrivateCount);
@@ -1122,11 +1122,15 @@ void
 xf86VDrvMsgVerb(int scrnIndex, MessageType type, int verb, const char *format,
                 va_list args)
 {
+    char *name = NULL;
+
+    if ((scrnIndex >= 0 && scrnIndex < xf86NumScreens) ||
+        (scrnIndex >= 16 && scrnIndex < 16 + xf86NumGPUScreens))
+        name = scrnIndex >= 16 ? xf86GPUScreens[scrnIndex-16]->name : xf86Screens[scrnIndex]->name;
     /* Prefix the scrnIndex name to the format string. */
-    if (scrnIndex >= 0 && scrnIndex < xf86NumScreens &&
-        xf86Screens[scrnIndex]->name)
+    if (name)
         LogHdrMessageVerb(type, verb, format, args, "%s(%d): ",
-                          xf86Screens[scrnIndex]->name, scrnIndex);
+                          name, scrnIndex);
     else
         LogVMessageVerb(type, verb, format, args);
 }
@@ -1915,5 +1919,7 @@ xf86ScreenToScrn(ScreenPtr pScreen)
 ScreenPtr
 xf86ScrnToScreen(ScrnInfoPtr pScrn)
 {
+    if (pScrn->scrnIndex >= 16)
+        return screenInfo.gpuscreens[pScrn->scrnIndex - 16];
     return screenInfo.screens[pScrn->scrnIndex];
 }
