@@ -250,6 +250,10 @@ xf86BusConfig(void)
 void
 xf86BusProbe(void)
 {
+#if defined(CONFIG_UDEV)
+    if (xf86udevProbe())
+        return;
+#endif
 #ifdef XSERVER_LIBPCIACCESS
     xf86PciProbe();
 #endif
@@ -282,6 +286,9 @@ StringToBusType(const char *busID, const char **retID)
         free(s);
         return BUS_NONE;
     }
+    if (!xf86NameCmp(p, "udev"))
+        ret = BUS_UDEV;
+
     if (!xf86NameCmp(p, "pci") || !xf86NameCmp(p, "agp"))
         ret = BUS_PCI;
     if (!xf86NameCmp(p, "sbus"))
@@ -310,14 +317,23 @@ xf86IsEntityPrimary(int entityIndex)
 {
     EntityPtr pEnt = xf86Entities[entityIndex];
 
-    if (primaryBus.type != pEnt->bus.type)
-        return FALSE;
-
     switch (pEnt->bus.type) {
     case BUS_PCI:
+        if (primaryBus.type != pEnt->bus.type)
+            return FALSE;
         return pEnt->bus.id.pci == primaryBus.id.pci;
     case BUS_SBUS:
+        if (primaryBus.type != pEnt->bus.type)
+            return FALSE;
         return pEnt->bus.id.sbus.fbNum == primaryBus.id.sbus.fbNum;
+    case BUS_UDEV:
+        if (!pEnt->bus.id.udev->pdev)
+            return FALSE;
+        return ((pEnt->bus.id.udev->pdev->domain == primaryBus.id.pci->domain) &&
+                (pEnt->bus.id.udev->pdev->bus == primaryBus.id.pci->bus) &&
+                (pEnt->bus.id.udev->pdev->dev == primaryBus.id.pci->dev) &&
+                (pEnt->bus.id.udev->pdev->func == primaryBus.id.pci->func));
+        return FALSE;
     default:
         return FALSE;
     }

@@ -42,6 +42,7 @@
 #if defined(__sparc__) || defined(__sparc)
 #include "xf86sbusBus.h"
 #endif
+#include "xf86udev.h"
 
 typedef struct {
     DriverPtr driver;
