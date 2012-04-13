@@ -274,6 +274,7 @@ impedDestroyPixmap(PixmapPtr pPixmap)
     if (--pPixmap->refcnt)
 	return TRUE;
 
+    xorg_list_del(&pPixmap->member);
     for (i = 0; i < pScreen->num_gpu; i++) {
 	pScreen->gpu[i]->DestroyPixmap(pPixmap->gpu[i]);
     }
