@@ -43,47 +43,6 @@ static Bool CreateSourcePict(PicturePtr pPicture, PictureScreenPtr ps, int num_g
     return TRUE;
 }
 
-static int
-impedCreatePicture (PicturePtr pPicture)
-{
-    ScreenPtr pScreen = pPicture->pDrawable->pScreen;
-    PictureScreenPtr ps;
-    int i;
-    PixmapPtr pPixmap;
-    int x_off = 0, y_off = 0;
-    int error;
-
-    ps = GetPictureScreen(pPicture->pDrawable->pScreen);
-
-    pPixmap = GetDrawablePixmap(pPicture->pDrawable);
-
-#if 0  
-    if (!pPicture->parent) {
-      //imped_pict->parent = pPicture;
-        xorg_list_add(&pPicture->member, &pScreen->picture_list);
-    }
-#endif
-    /* have to translate the composite clip before syncing it */
-#ifdef COMPOSITE
-    if (pPicture->pCompositeClip && pPicture->pDrawable->type == DRAWABLE_WINDOW) {
-      x_off = -pPixmap->screen_x;
-      y_off = -pPixmap->screen_y;
-      RegionTranslate(pPicture->pCompositeClip, x_off, y_off);
-    }
-#endif
-    for (i = 0; i < pScreen->num_gpu; i++) {
-	pPicture->gpu[i] = CreatePicture(0, &pPixmap->gpu[i]->drawable, pPicture->pFormat,
-                                         0, 0, serverClient, &error);
-	if (!pPicture->gpu[i])
-	    ErrorF("no gpu %d picture\n", i);
-    }
-#ifdef COMPOSITE
-    if (x_off || y_off) {
-      RegionTranslate(pPicture->pCompositeClip, -x_off, -y_off);
-    }
-#endif
-    return 0;
-}
 
 static void
 impedComposite (CARD8      op,
@@ -490,12 +449,53 @@ impedChangePicture(PicturePtr pPicture, Mask mask)
 
     if (!pPicture->pDrawable)
         return;
+    if (!pPicture->gpu[i])
+        return;
     pScreen = pPicture->pDrawable->pScreen;
     for (i = 0; i < pScreen->num_gpu; i++) {
         impedChangeOnePicture(pPicture, pPicture->gpu[i], i, mask);
     }
 }
-                  
+
+static int
+impedCreatePicture (PicturePtr pPicture)
+{
+    ScreenPtr pScreen = pPicture->pDrawable->pScreen;
+    PictureScreenPtr ps;
+    int i;
+    PixmapPtr pPixmap;
+    int x_off = 0, y_off = 0;
+    int error;
+
+    ps = GetPictureScreen(pPicture->pDrawable->pScreen);
+
+    pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+
+    xorg_list_add(&pPicture->member, &pScreen->picture_list);
+
+    /* have to translate the composite clip before syncing it */
+#ifdef COMPOSITE
+    if (pPicture->pCompositeClip && pPicture->pDrawable->type == DRAWABLE_WINDOW) {
+      x_off = -pPixmap->screen_x;
+      y_off = -pPixmap->screen_y;
+      RegionTranslate(pPicture->pCompositeClip, x_off, y_off);
+    }
+#endif
+    for (i = 0; i < pScreen->num_gpu; i++) {
+	pPicture->gpu[i] = CreatePicture(0, &pPixmap->gpu[i]->drawable, pPicture->pFormat,
+                                         0, 0, serverClient, &error);
+	if (!pPicture->gpu[i])
+	    ErrorF("no gpu %d picture\n", i);
+        impedChangeOnePicture(pPicture, pPicture->gpu[i], i, 0xffffffff);
+    }
+#ifdef COMPOSITE
+    if (x_off || y_off) {
+      RegionTranslate(pPicture->pCompositeClip, -x_off, -y_off);
+    }
+#endif
+    return 0;
+}
+             
 static void
 impedDestroyPicture(PicturePtr pPicture)
 {
@@ -508,9 +508,46 @@ impedDestroyPicture(PicturePtr pPicture)
 	pPicture->gpu[i] = NULL;
     }
     miDestroyPicture(pPicture);
+}
 
+static void
+impedValidatePicture(PicturePtr pPicture, Mask mask)
+{
+    int x_off, y_off;
+    int i;
+    ScreenPtr pScreen;
+    miValidatePicture(pPicture, mask);
+    /**/
+    if (!pPicture->pDrawable)
+        return;
 
-    /* TODO free sub pictures */
+    pScreen = pPicture->pDrawable->pScreen;
+#ifdef COMPOSITE
+    if (pPicture->pCompositeClip && pPicture->pDrawable->type == DRAWABLE_WINDOW) {
+        PixmapPtr pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+        x_off = -pPixmap->screen_x;
+        y_off = -pPixmap->screen_y;
+        RegionTranslate(pPicture->pCompositeClip, x_off, y_off);
+    }
+#endif
+    for (i = 0; i < pScreen->num_gpu; i++) {
+        PicturePtr pDrvPicture = pPicture->gpu[i];
+        pDrvPicture->freeCompClip = TRUE;
+        if (!pDrvPicture->pCompositeClip)
+            pDrvPicture->pCompositeClip = RegionCreate(NullBox, 0);
+
+        if (pPicture->pCompositeClip)
+            RegionCopy(pDrvPicture->pCompositeClip, pPicture->pCompositeClip);
+        else
+            RegionNull(pDrvPicture->pCompositeClip);
+    }
+        
+
+#ifdef COMPOSITE
+    if (x_off || y_off) {
+      RegionTranslate(pPicture->pCompositeClip, -x_off, -y_off);
+    }
+#endif
 }
 
 Bool
@@ -527,6 +564,7 @@ impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
 
     ps->CreatePicture = impedCreatePicture;
     ps->ChangePicture = impedChangePicture;
+    ps->ValidatePicture = impedValidatePicture;
     ps->Composite = impedComposite;
     ps->RasterizeTrapezoid = impedRasterizeTrapezoid;
     ps->AddTraps = impedAddTraps;
