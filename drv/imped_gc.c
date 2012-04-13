@@ -79,6 +79,14 @@ impedValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
     for (i = 0; i < pGC->pScreen->num_gpu; i++) {
 	pDrvGC = pGC->gpu[i];
 
+	/* check tile pixmap */
+	if (pGC->fillStyle == FillTiled && !pGC->tileIsPixel) {
+	    if (pDrvGC->tile.pixmap != pGC->tile.pixmap->gpu[i]) {
+		pDrvGC->tile.pixmap = pGC->tile.pixmap->gpu[i];
+		pDrvGC->tile.pixmap->refcnt++;
+	    }
+	}
+	    
 	pDrvGC->funcs->ValidateGC(pDrvGC, changes, &pPixmap->gpu[i]->drawable);
     }
 #ifdef COMPOSITE
