@@ -2472,8 +2472,8 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
             }
         }
 
-        scrn->display->virtualX = width;
-        scrn->display->virtualY = height;
+	//        scrn->display->virtualX = width;
+	//        scrn->display->virtualY = height;
     }
 
     if (width > scrn->virtualX)
