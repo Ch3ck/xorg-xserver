@@ -31,10 +31,11 @@ static void finish_shatter_clip(RegionPtr orig_region, PicturePtr pDrvPicture)
 static Bool CreateSourcePict(PicturePtr pPicture, PictureScreenPtr ps, int num_gpu)
 {
     int i;
+    int error;
 
     for (i = 0; i < num_gpu; i++) {
 	if (!pPicture->gpu[i]) {
-	    pPicture->gpu[i] = CreatePicture(0, NULL, pPicture->pFormat, 0, NULL, NullClient, NULL);
+	    pPicture->gpu[i] = CreatePicture(0, NULL, pPicture->pFormat, 0, NULL, serverClient, &error);
 	    if (!pPicture->gpu[i])
 		return FALSE;
 	}
@@ -50,10 +51,12 @@ impedCreatePicture (PicturePtr pPicture)
     int i;
     PixmapPtr pPixmap;
     int x_off = 0, y_off = 0;
+    int error;
+
     ps = GetPictureScreen(pPicture->pDrawable->pScreen);
 
     pPixmap = GetDrawablePixmap(pPicture->pDrawable);
-  
+
 #if 0  
     if (!pPicture->parent) {
       //imped_pict->parent = pPicture;
@@ -70,7 +73,7 @@ impedCreatePicture (PicturePtr pPicture)
 #endif
     for (i = 0; i < pScreen->num_gpu; i++) {
 	pPicture->gpu[i] = CreatePicture(0, &pPixmap->gpu[i]->drawable, pPicture->pFormat,
-                                         0, 0, NullClient, NULL);
+                                         0, 0, serverClient, &error);
 	if (!pPicture->gpu[i])
 	    ErrorF("no gpu %d picture\n", i);
     }
@@ -420,6 +423,80 @@ impedGlyphs(CARD8      op,
 }
 
 static void
+impedChangeOnePicture(PicturePtr pPicture, PicturePtr pChild, int index, Mask mask)
+{
+    Mask maskQ;
+    BITS32 index2;
+
+    maskQ = mask;
+    while (mask) {
+        index2 = (BITS32) lowbit(mask);
+        mask &= ~index2;
+        pChild->stateChanges |= index2;
+        switch (index2) {
+        case CPRepeat:
+            pChild->repeat = pPicture->repeat;
+            pChild->repeatType = pPicture->repeatType;
+            break;
+        case CPAlphaMap:
+            if (pPicture->alphaMap)
+                pChild->alphaMap = pPicture->alphaMap->gpu[index];
+            else
+                pChild->alphaMap = NULL;
+            break;
+        case CPAlphaXOrigin:
+            pChild->alphaOrigin.x = pPicture->alphaOrigin.x;
+            break;
+        case CPAlphaYOrigin:
+            pChild->alphaOrigin.y = pPicture->alphaOrigin.y;
+            break;
+        case CPClipXOrigin:
+            pChild->clipOrigin.x = pPicture->clipOrigin.x;
+            break;
+        case CPClipYOrigin:
+            pChild->clipOrigin.y = pPicture->clipOrigin.y;
+            break;
+        case CPClipMask:
+            /* TODO */
+            break;
+        case CPGraphicsExposure:
+            pChild->graphicsExposures = pPicture->graphicsExposures;
+            break;
+        case CPSubwindowMode:
+            pChild->subWindowMode = pPicture->subWindowMode;
+            break;
+        case CPPolyEdge:
+            pChild->polyEdge = pPicture->polyEdge;
+            break;
+        case CPPolyMode:
+            pChild->polyMode = pPicture->polyMode;
+            break;
+        case CPDither:
+            break;
+        case CPComponentAlpha:
+            pChild->componentAlpha = pPicture->componentAlpha;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+static void
+impedChangePicture(PicturePtr pPicture, Mask mask)
+{
+    ScreenPtr pScreen;
+    int i;
+
+    if (!pPicture->pDrawable)
+        return;
+    pScreen = pPicture->pDrawable->pScreen;
+    for (i = 0; i < pScreen->num_gpu; i++) {
+        impedChangeOnePicture(pPicture, pPicture->gpu[i], i, mask);
+    }
+}
+                  
+static void
 impedDestroyPicture(PicturePtr pPicture)
 {
     int i;
@@ -449,6 +526,7 @@ impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
     ps = GetPictureScreen(pScreen);
 
     ps->CreatePicture = impedCreatePicture;
+    ps->ChangePicture = impedChangePicture;
     ps->Composite = impedComposite;
     ps->RasterizeTrapezoid = impedRasterizeTrapezoid;
     ps->AddTraps = impedAddTraps;
