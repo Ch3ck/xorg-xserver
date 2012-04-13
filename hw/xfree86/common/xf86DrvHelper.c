@@ -75,7 +75,7 @@ retry:
         return FALSE;
 
    // xf86FixupRGBOrdering(master, pScreen);
-    if (!miPictureInit(pScreen, 0, 0))
+    if (!impedPictureInit(pScreen, 0, 0))
 	return FALSE;
     
     miDCInitialize(pScreen, xf86GetPointerScreenFuncs());

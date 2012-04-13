@@ -1,6 +1,8 @@
 #ifndef IMPED_H
 #define IMPED_H
 
+#include "picturestr.h"
+
 extern _X_EXPORT Bool impedSetupScreen(ScreenPtr pScreen);
 
 extern _X_EXPORT Bool impedFinishScreenInit(ScreenPtr pScreen,
@@ -89,4 +91,6 @@ static inline void impedGetCompositeDeltas(DrawablePtr pDrawable, PixmapPtr pPix
 #endif
 }
 
+extern _X_EXPORT Bool
+impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 #endif

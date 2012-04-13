@@ -158,6 +158,10 @@ typedef struct _Picture {
     SourcePictPtr pSourcePict;
     xFixed *filter_params;
     int filter_nparams;
+
+    struct xorg_list member;
+    PicturePtr master;
+    PicturePtr gpu[4];
 } PictureRec;
 
 typedef Bool (*PictFilterValidateParamsProcPtr) (ScreenPtr pScreen, int id,
