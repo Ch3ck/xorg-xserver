@@ -160,7 +160,7 @@ typedef struct _Picture {
     int filter_nparams;
 
     struct xorg_list member;
-    PicturePtr master;
+    PicturePtr parent; /* link to protocol copy */
     PicturePtr gpu[4];
 } PictureRec;
 

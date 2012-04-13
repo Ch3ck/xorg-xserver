@@ -486,6 +486,7 @@ impedCreatePicture (PicturePtr pPicture)
                                          0, 0, serverClient, &error);
 	if (!pPicture->gpu[i])
 	    ErrorF("no gpu %d picture\n", i);
+        pPicture->gpu[i]->parent = pPicture;
         impedChangeOnePicture(pPicture, pPicture->gpu[i], i, 0xffffffff);
     }
 #ifdef COMPOSITE

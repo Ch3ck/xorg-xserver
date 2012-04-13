@@ -847,6 +847,7 @@ impedCreateGC(GCPtr pGC)
     xorg_list_for_each_entry(iter, &pGC->pScreen->gpu_screen_list, gpu_screen_head) {
         gpugc = NewGCObject(iter, pGC->depth);
         pGC->gpu[i] = gpugc;
+        gpugc->parent = pGC;
         ret = gpugc->pScreen->CreateGC(gpugc);
         if (ret == FALSE)
             return FALSE;
