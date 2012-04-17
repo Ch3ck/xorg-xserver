@@ -349,6 +349,16 @@ typedef void (*ConstrainCursorHarderProcPtr) (DeviceIntPtr, ScreenPtr, int,
 typedef miCopyProc (*GetCopyAreaFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
 typedef miCopyProc (*GetCopyPlaneFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
 
+typedef Bool (*SharePixmapBackingProcPtr)(PixmapPtr, int *);
+
+typedef Bool (*SetSharedPixmapBackingProcPtr)(PixmapPtr, int);
+
+typedef Bool (*StartPixmapTrackingProcPtr)(PixmapPtr, PixmapPtr,
+                                           PixmapPtr, int x, int y);
+
+typedef Bool (*StopPixmapTrackingProcPtr)(PixmapPtr, PixmapPtr);
+
+
 typedef struct _Screen {
     int myNum;                  /* index of this instance in Screens[] */
     ATOM id;
@@ -518,6 +528,13 @@ typedef struct _Screen {
     GetCopyAreaFunctionProcPtr GetCopyAreaFunction;
     GetCopyPlaneFunctionProcPtr GetCopyPlaneFunction;
     PixmapPtr omghack;
+
+    SharePixmapBackingProcPtr SharePixmapBacking;
+    SetSharedPixmapBackingProcPtr SetSharedPixmapBacking;
+
+    StartPixmapTrackingProcPtr StartPixmapTracking;
+    StopPixmapTrackingProcPtr StopPixmapTracking;
+
 } ScreenRec;
 
 static inline RegionPtr
