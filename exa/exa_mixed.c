@@ -294,3 +294,37 @@ exaPixmapHasGpuCopy_mixed(PixmapPtr pPixmap)
 
     return ret;
 }
+
+Bool
+exaSharePixmapBacking_mixed(PixmapPtr pPixmap, int *handle_p)
+{
+    ScreenPtr pScreen = pPixmap->drawable.pScreen;
+    ExaScreenPriv(pScreen);
+    Bool ret = FALSE;
+
+    exaMoveInPixmap(pPixmap);
+    /* get the driver to give us a handle */
+    if (pExaScr->info->SharePixmapBacking)
+        ret = pExaScr->info->SharePixmapBacking(pPixmap, handle_p);
+
+    ErrorF("shared pixmap\n");
+    return ret;
+}
+
+Bool
+exaSetSharedPixmapBacking_mixed(PixmapPtr pPixmap, int handle)
+{
+    ScreenPtr pScreen = pPixmap->drawable.pScreen;
+    ExaScreenPriv(pScreen);
+    Bool ret = FALSE;
+
+    if (pExaScr->info->SetSharedPixmapBacking)
+        ret = pExaScr->info->SetSharedPixmapBacking(pPixmap, handle);
+
+       if (ret == TRUE)
+        exaMoveInPixmap(pPixmap);
+
+    return ret;
+}
+
+

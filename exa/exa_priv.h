@@ -163,6 +163,8 @@ typedef struct {
     BitmapToRegionProcPtr SavedBitmapToRegion;
     CreateScreenResourcesProcPtr SavedCreateScreenResources;
     ModifyPixmapHeaderProcPtr SavedModifyPixmapHeader;
+    SharePixmapBackingProcPtr SavedSharePixmapBacking;
+    SetSharedPixmapBackingProcPtr SavedSetSharedPixmapBacking;
     SourceValidateProcPtr SavedSourceValidate;
     CompositeProcPtr SavedComposite;
     TrianglesProcPtr SavedTriangles;
@@ -661,6 +663,11 @@ void
 
 void
  exaPrepareAccessReg_mixed(PixmapPtr pPixmap, int index, RegionPtr pReg);
+
+Bool
+exaSetSharedPixmapBacking_mixed(PixmapPtr pPixmap, int handle);
+Bool
+exaSharePixmapBacking_mixed(PixmapPtr pPixmap, int *handle_p);
 
 /* exa_render.c */
 Bool
