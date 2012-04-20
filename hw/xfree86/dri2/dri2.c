@@ -1203,6 +1203,22 @@ DRI2ConfigNotify(WindowPtr pWin, int x, int y, int w, int h, int bw,
     return Success;
 }
 
+static Bool DRI2InitPrivates(void)
+{
+    if (!dixRegisterPrivateKey(&dri2ScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
+        return FALSE;
+
+    if (!dixRegisterPrivateKey(&dri2WindowPrivateKeyRec, PRIVATE_WINDOW, 0))
+        return FALSE;
+
+    if (!dixRegisterPrivateKey(&dri2PixmapPrivateKeyRec, PRIVATE_PIXMAP, 0))
+        return FALSE;
+
+    if (!dixRegisterPrivateKey(&dri2ClientPrivateKeyRec, PRIVATE_CLIENT, sizeof(DRI2ClientRec)))
+        return FALSE;
+    return TRUE;
+}
+
 Bool
 DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
 {
@@ -1224,16 +1240,7 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
         return FALSE;
     }
 
-    if (!dixRegisterPrivateKey(&dri2ScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
-        return FALSE;
-
-    if (!dixRegisterPrivateKey(&dri2WindowPrivateKeyRec, PRIVATE_WINDOW, 0))
-        return FALSE;
-
-    if (!dixRegisterPrivateKey(&dri2PixmapPrivateKeyRec, PRIVATE_PIXMAP, 0))
-        return FALSE;
-
-    if (!dixRegisterPrivateKey(&dri2ClientPrivateKeyRec, PRIVATE_CLIENT, sizeof(DRI2ClientRec)))
+    if (!DRI2InitPrivates())
         return FALSE;
 
     ds = calloc(1, sizeof *ds);
