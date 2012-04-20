@@ -336,4 +336,35 @@ extern _X_EXPORT void DRI2WaitMSCComplete(ClientPtr client, DrawablePtr pDraw,
                                           int frame, unsigned int tv_sec,
                                           unsigned int tv_usec);
 
+/* Version 7 structure */
+enum DRI2FrameEventType {
+        DRI2_SWAP,
+        DRI2_FLIP,
+        DRI2_WAITMSC,
+};
+
+typedef struct _DRI2FrameEvent {
+        XID drawable_id;
+        ClientPtr client;
+        enum DRI2FrameEventType type;
+        uint64_t frame;
+
+        /* for swaps & flips only */
+        DRI2SwapEventPtr event_complete;
+        void *event_data;
+        DRI2BufferPtr front;
+        DRI2BufferPtr back;
+        void *driverPrivate;
+} DRI2FrameEventRec, *DRI2FrameEventPtr;
+
+extern _X_EXPORT void DRI2FrameEventHandler(DRI2FrameEventPtr event,
+                                            unsigned int frame,
+                                            unsigned int tv_sec,
+                                            unsigned int tv_usec,
+                                            Bool can_flip);
+
+extern _X_EXPORT void DRI2FlipEventHandler(DRI2FrameEventPtr flip,
+                                           unsigned int frame,
+                                           unsigned int tv_sec,
+                                           unsigned int tv_usec);
 #endif
