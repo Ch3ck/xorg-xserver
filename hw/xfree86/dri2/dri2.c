@@ -63,6 +63,17 @@ static DevPrivateKeyRec dri2PixmapPrivateKeyRec;
 
 #define dri2PixmapPrivateKey (&dri2PixmapPrivateKeyRec)
 
+static DevPrivateKeyRec dri2ClientPrivateKeyRec;
+
+#define dri2ClientPrivateKey (&dri2ClientPrivateKeyRec)
+
+#define dri2ClientPrivate(_pClient) (dixLookupPrivate(&(_pClient)->devPrivates, \
+                                                      dri2ClientPrivateKey))
+
+typedef struct _DRI2Client {
+    int prime_id;
+} DRI2ClientRec, *DRI2ClientPtr;
+
 static RESTYPE dri2DrawableRes;
 
 typedef struct _DRI2Screen *DRI2ScreenPtr;
@@ -87,6 +98,7 @@ typedef struct _DRI2Drawable {
     int swap_limit;             /* for N-buffering */
     unsigned long serialNumber;
     Bool needInvalidate;
+    int prime_id;
 } DRI2DrawableRec, *DRI2DrawablePtr;
 
 typedef struct _DRI2Screen {
@@ -111,6 +123,11 @@ typedef struct _DRI2Screen {
     HandleExposuresProcPtr HandleExposures;
 
     ConfigNotifyProcPtr ConfigNotify;
+
+    DRI2GetDriverInfoProcPtr GetDriverInfo;
+    DRI2AuthMagic2ProcPtr AuthMagic2;
+    DRI2CreateBuffer2ProcPtr CreateBuffer2;
+
 } DRI2ScreenRec;
 
 static DRI2ScreenPtr
@@ -284,6 +301,7 @@ DRI2CreateDrawable(ClientPtr client, DrawablePtr pDraw, XID id,
                    DRI2InvalidateProcPtr invalidate, void *priv)
 {
     DRI2DrawablePtr pPriv;
+    DRI2ClientPtr dri2_client = dri2ClientPrivate(client);
     XID dri2_id;
     int rc;
 
@@ -292,6 +310,8 @@ DRI2CreateDrawable(ClientPtr client, DrawablePtr pDraw, XID id,
         pPriv = DRI2AllocateDrawable(pDraw);
     if (pPriv == NULL)
         return BadAlloc;
+
+    pPriv->prime_id = dri2_client->prime_id;
 
     dri2_id = FakeClientID(client->index);
     rc = DRI2AddDrawableRef(pPriv, id, dri2_id, invalidate, priv);
@@ -385,7 +405,10 @@ allocate_or_reuse_buffer(DrawablePtr pDraw, DRI2ScreenPtr ds,
     if ((old_buf < 0)
         || attachment == DRI2BufferFrontLeft
         || !dimensions_match || (pPriv->buffers[old_buf]->format != format)) {
-        *buffer = (*ds->CreateBuffer) (pDraw, attachment, format);
+        if (*ds->CreateBuffer2)
+            *buffer = (*ds->CreateBuffer2) (pDraw, attachment, format, pPriv->prime_id);
+        else
+            *buffer = (*ds->CreateBuffer) (pDraw, attachment, format);
         pPriv->serialNumber = DRI2DrawableSerial(pDraw);
         return TRUE;
 
@@ -1089,35 +1112,67 @@ DRI2HasSwapControl(ScreenPtr pScreen)
 }
 
 Bool
-DRI2Connect(ScreenPtr pScreen, unsigned int driverType, int *fd,
+DRI2Connect(ClientPtr client, ScreenPtr pScreen,
+	    unsigned int driverType, int *fd,
             const char **driverName, const char **deviceName)
 {
     DRI2ScreenPtr ds;
+    uint32_t prime_id = 0;
+    Bool ret;
 
     if (!dixPrivateKeyRegistered(dri2ScreenPrivateKey))
         return FALSE;
 
     ds = DRI2GetScreen(pScreen);
-    if (ds == NULL || driverType >= ds->numDrivers ||
-        !ds->driverNames[driverType])
+    if (ds == NULL)
         return FALSE;
 
+    if (ds->GetDriverInfo) {
+        ret = ds->GetDriverInfo(pScreen, driverType, &prime_id,
+                                driverName, deviceName);
+        if (ret == FALSE)
+            return ret;
+    } else {
+        if (driverType >= ds->numDrivers ||
+            !ds->driverNames[driverType])
+            return FALSE;
+
+        *driverName = ds->driverNames[driverType];
+        *deviceName = ds->deviceName;
+    }
     *fd = ds->fd;
-    *driverName = ds->driverNames[driverType];
-    *deviceName = ds->deviceName;
+
+    if (client) {
+        DRI2ClientPtr dri2_client;
+        dri2_client = dri2ClientPrivate(client);
+        dri2_client->prime_id = prime_id;
+    }
 
     return TRUE;
 }
 
 Bool
-DRI2Authenticate(ScreenPtr pScreen, uint32_t magic)
+DRI2Authenticate(ClientPtr client, ScreenPtr pScreen, uint32_t magic)
 {
     DRI2ScreenPtr ds = DRI2GetScreen(pScreen);
+    DRI2ClientPtr dri2_client = dri2ClientPrivate(client);
 
-    if (ds == NULL || (*ds->AuthMagic) (ds->fd, magic))
+    if (ds == NULL)
         return FALSE;
 
-    return TRUE;
+    if (!ds->AuthMagic2) {
+        /* am2 required for prime */
+        if (dri2_client->prime_id > 0)
+            return FALSE;
+
+        if ((*ds->AuthMagic)(ds->fd, magic))
+            return FALSE;
+        return TRUE;
+    } else {
+        if ((*ds->AuthMagic2)(pScreen, dri2_client->prime_id, magic))
+            return FALSE;
+        return TRUE;
+    }
 }
 
 static int
@@ -1178,6 +1233,9 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
     if (!dixRegisterPrivateKey(&dri2PixmapPrivateKeyRec, PRIVATE_PIXMAP, 0))
         return FALSE;
 
+    if (!dixRegisterPrivateKey(&dri2ClientPrivateKeyRec, PRIVATE_CLIENT, sizeof(DRI2ClientRec)))
+        return FALSE;
+
     ds = calloc(1, sizeof *ds);
     if (!ds)
         return FALSE;
@@ -1210,11 +1268,17 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
         ds->SwapLimitValidate = info->SwapLimitValidate;
     }
 
+    if (info->version >= 7) {
+        ds->CreateBuffer2 = info->CreateBuffer2;
+        ds->AuthMagic2 = info->AuthMagic2;
+        ds->GetDriverInfo = info->GetDriverInfo;
+    }
+
     /*
      * if the driver doesn't provide an AuthMagic function or the info struct
      * version is too low, it relies on the old method (using libdrm) or fail
      */
-    if (!ds->AuthMagic)
+    if (!ds->AuthMagic && !ds->AuthMagic2)
 #ifdef WITH_LIBDRM
         ds->AuthMagic = drmAuthMagic;
 #else

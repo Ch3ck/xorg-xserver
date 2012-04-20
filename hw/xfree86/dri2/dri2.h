@@ -175,10 +175,31 @@ typedef void (*DRI2InvalidateProcPtr) (DrawablePtr pDraw, void *data, XID id);
 typedef Bool (*DRI2SwapLimitValidateProcPtr) (DrawablePtr pDraw,
                                               int swap_limit);
 
+typedef Bool (*DRI2GetDriverInfoProcPtr)(ScreenPtr pScreen,
+                                         int driverType,
+                                         uint32_t *is_prime,
+                                         const char **drivername,
+                                         const char **deviceName);
+
+typedef DRI2BufferPtr (*DRI2CreateBuffer2ProcPtr)(DrawablePtr pDraw,
+                                                  unsigned int attachment,
+                                                  unsigned int format,
+                                                  unsigned int prime_id);
+
+typedef int (*DRI2AuthMagic2ProcPtr)(ScreenPtr pScreen, 
+                                     int prime_id,
+                                     uint32_t magic);
+
+typedef void (*DRI2CopyPixmapPtrCB)(PixmapPtr src, PixmapPtr dst,
+                                    RegionPtr pRegion, RegionPtr front_clip);
+
+typedef void (*DRI2CopyRegionPixmapProcPtr)(PixmapPtr src, PixmapPtr dst,
+                                            RegionPtr pRegion, RegionPtr f_c,
+                                            DRI2CopyPixmapPtrCB cb);
 /**
  * Version of the DRI2InfoRec structure defined in this header
  */
-#define DRI2INFOREC_VERSION 6
+#define DRI2INFOREC_VERSION 7
 
 typedef struct {
     unsigned int version;       /**< Version of this struct */
@@ -211,6 +232,13 @@ typedef struct {
 
     DRI2ReuseBufferNotifyProcPtr ReuseBufferNotify;
     DRI2SwapLimitValidateProcPtr SwapLimitValidate;
+
+    /* added in version 7 */
+    DRI2GetDriverInfoProcPtr GetDriverInfo;
+    DRI2AuthMagic2ProcPtr AuthMagic2;
+    DRI2CreateBuffer2ProcPtr CreateBuffer2;
+
+    
 } DRI2InfoRec, *DRI2InfoPtr;
 
 extern _X_EXPORT int DRI2EventBase;
@@ -221,13 +249,13 @@ extern _X_EXPORT void DRI2CloseScreen(ScreenPtr pScreen);
 
 extern _X_EXPORT Bool DRI2HasSwapControl(ScreenPtr pScreen);
 
-extern _X_EXPORT Bool DRI2Connect(ScreenPtr pScreen,
+extern _X_EXPORT Bool DRI2Connect(ClientPtr client, ScreenPtr pScreen,
                                   unsigned int driverType,
                                   int *fd,
                                   const char **driverName,
                                   const char **deviceName);
 
-extern _X_EXPORT Bool DRI2Authenticate(ScreenPtr pScreen, uint32_t magic);
+extern _X_EXPORT Bool DRI2Authenticate(ClientPtr client, ScreenPtr pScreen, uint32_t magic);
 
 extern _X_EXPORT int DRI2CreateDrawable(ClientPtr client,
                                         DrawablePtr pDraw,
