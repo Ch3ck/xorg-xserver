@@ -79,7 +79,7 @@ xf86CallDriverProbe(DriverPtr drv, Bool detect_only, Bool drv_v2)
 
     if (drv_v2) {
         foundScreen = xf86udevProbeDev(drv);
-    }
+    } else
 #ifdef XSERVER_LIBPCIACCESS
     if (foundScreen == FALSE && drv->PciProbe != NULL) {
         if (xf86DoConfigure && xf86DoConfigurePass1) {

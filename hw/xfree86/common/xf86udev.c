@@ -258,25 +258,56 @@ int xf86UnclaimUdevSlot(struct xf86_udev_device *d)
     return 0;
 }
 
+#define END_OF_MATCHES(m) \
+    (((m).vendor_id == 0) && ((m).device_id == 0) && ((m).subvendor_id == 0))
+
 int xf86udevProbeDev(DriverPtr drvp)
 {
     Bool foundScreen = FALSE;
     GDevPtr *devList;
     const unsigned numDevs = xf86MatchDevice(drvp->driverName, &devList);
-    int i, j;
+    int i, j, k;
     int  entity;
+    const struct pci_id_match *const devices = drvp->supported_devices;
+    struct pci_device *pPci;
 
     for (i = 0; i < numDevs; i++) {
 	for (j = 0; j < num_udev_devices; j++) {
-	    if (xf86_check_udev_slot(&xf86_udev_devices[j])) {
+	    /* overload PCI match loading if we can use it */
+	    if (xf86_udev_devices[j].pdev && devices) {
+		int device_id = xf86_udev_devices[j].pdev->device_id;
+		pPci = xf86_udev_devices[j].pdev;
+		for (k = 0; !END_OF_MATCHES(devices[k]); k++) {
+		    if (PCI_ID_COMPARE(devices[k].vendor_id, pPci->vendor_id)
+			&& PCI_ID_COMPARE(devices[k].device_id, device_id)
+			&& ((devices[k].device_class_mask & pPci->device_class)
+			    ==  devices[k].device_class)) {
+			entity = xf86ClaimUdevSlot(&xf86_udev_devices[j],
+						   drvp, 0, devList[i], devList[i]->active);
+			if (entity != -1) {
+			    if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], devices[k].match_data))
+				continue;
+			    foundScreen = TRUE;
+			    break;
+			}
+			else
+			    xf86UnclaimUdevSlot(&xf86_udev_devices[j]);
+		    }
+		}
+	    } else if (xf86_udev_devices[j].pdev && !devices)
+		  continue;
+	    else {
+		if (xf86_check_udev_slot(&xf86_udev_devices[j])) {
 		    entity = xf86ClaimUdevSlot(&xf86_udev_devices[j],
 					       drvp, 0, devList[i], devList[i]->active);
-		    if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j]))
+		    if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], 0))
 			continue;
+		    foundScreen = TRUE;
+		}
 	    }
 	}
     }
-    return 0;
+    return foundScreen;
 }
 
 int AddOutputDevice(struct udev_device *udev_device)
@@ -310,7 +341,7 @@ int AddOutputDevice(struct udev_device *udev_device)
 	old_screens = xf86NumGPUScreens;
 	entity = xf86ClaimUdevSlot(&xf86_udev_devices[num_udev_devices-1],
 				   drvp, 0, 0, 0);
-	drvp->UdevProbe(drvp, entity, &xf86_udev_devices[num_udev_devices-1]);
+	drvp->UdevProbe(drvp, entity, &xf86_udev_devices[num_udev_devices-1], 0);
 	
 	if (old_screens == xf86NumGPUScreens)
 	    return 0;

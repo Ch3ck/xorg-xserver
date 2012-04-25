@@ -43,7 +43,7 @@ impedHelperScreenInit(ScreenPtr pScreen,
     int width = 0, height = 0;
     int i;
     Bool allow_slave = FALSE;
-    ScrnInfoPtr master;
+    ScrnInfoPtr master = NULL;
 
     if (!impedSetupScreen(pScreen))
         return FALSE;
@@ -69,6 +69,8 @@ retry:
 	break;
     }
 
+    if (!master)
+      return FALSE;
     if (!impedFinishScreenInit(pScreen, NULL, width, height,
                                75, 75,
                                master->displayWidth, master->bitsPerPixel))

@@ -853,7 +853,8 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 
             xf86GPUScreens[i]->vtSema = TRUE;
         } else {
-            FatalError("AddScreen/ScreenInit failed for driver %d\n", i);
+	  ErrorF("AddScreen/ScreenInit failed for driver %d\n", i);
+	  xf86NumGPUScreens--;
         }
     }
 

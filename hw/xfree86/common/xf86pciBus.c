@@ -365,7 +365,16 @@ xf86GetPciInfoForEntity(int entityIndex)
         return NULL;
 
     p = xf86Entities[entityIndex];
-    return (p->bus.type == BUS_PCI) ? p->bus.id.pci : NULL;
+    switch (p->bus.type) {
+    case BUS_PCI:
+        return p->bus.id.pci;
+    case BUS_UDEV:
+	if (p->bus.id.udev->pdev)
+		return p->bus.id.udev->pdev;
+    default:
+	break;
+    }
+    return NULL;
 }
 
 /*

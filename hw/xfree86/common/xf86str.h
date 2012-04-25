@@ -328,7 +328,7 @@ typedef struct _DriverRec {
     Bool (*PciProbe) (struct _DriverRec * drv, int entity_num,
                       struct pci_device * dev, intptr_t match_data);
     Bool (*UdevProbe) (struct _DriverRec *drv, int entity_num,
-		       struct xf86_udev_device *dev);
+		       struct xf86_udev_device *dev, intptr_t dev_match_data);
 } DriverRec, *DriverPtr;
 
 /*
