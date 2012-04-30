@@ -11,6 +11,7 @@ libdri2_ladir = $(moduledir)/extensions
 libdri2_la_SOURCES = \
 	dri2.c \
 	dri2.h \
-	dri2ext.c
+	dri2ext.c \
+	imped_dri2.c
 
 sdk_HEADERS = dri2.h

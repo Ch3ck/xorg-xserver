@@ -47,13 +47,13 @@
 #include "xf86VGAarbiter.h"
 
 #include "xf86.h"
-
+#include "dri2_priv.h"
+extern Bool impedDRI2ScreenInit(ScreenPtr screen);
 CARD8 dri2_major;               /* version of DRI2 supported by DDX */
 CARD8 dri2_minor;
 
-static DevPrivateKeyRec dri2ScreenPrivateKeyRec;
+DevPrivateKeyRec dri2ScreenPrivateKeyRec;
 
-#define dri2ScreenPrivateKey (&dri2ScreenPrivateKeyRec)
 
 static DevPrivateKeyRec dri2WindowPrivateKeyRec;
 
@@ -75,8 +75,6 @@ typedef struct _DRI2Client {
 } DRI2ClientRec, *DRI2ClientPtr;
 
 static RESTYPE dri2DrawableRes;
-
-typedef struct _DRI2Screen *DRI2ScreenPtr;
 
 typedef struct _DRI2Drawable {
     DRI2ScreenPtr dri2_screen;
@@ -101,40 +99,6 @@ typedef struct _DRI2Drawable {
     int prime_id;
 } DRI2DrawableRec, *DRI2DrawablePtr;
 
-typedef struct _DRI2Screen {
-    ScreenPtr screen;
-    int refcnt;
-    unsigned int numDrivers;
-    const char **driverNames;
-    const char *deviceName;
-    int fd;
-    unsigned int lastSequence;
-
-    DRI2CreateBufferProcPtr CreateBuffer;
-    DRI2DestroyBufferProcPtr DestroyBuffer;
-    DRI2CopyRegionProcPtr CopyRegion;
-    DRI2ScheduleSwapProcPtr ScheduleSwap;
-    DRI2GetMSCProcPtr GetMSC;
-    DRI2ScheduleWaitMSCProcPtr ScheduleWaitMSC;
-    DRI2AuthMagicProcPtr AuthMagic;
-    DRI2ReuseBufferNotifyProcPtr ReuseBufferNotify;
-    DRI2SwapLimitValidateProcPtr SwapLimitValidate;
-
-    HandleExposuresProcPtr HandleExposures;
-
-    ConfigNotifyProcPtr ConfigNotify;
-
-    DRI2GetDriverInfoProcPtr GetDriverInfo;
-    DRI2AuthMagic2ProcPtr AuthMagic2;
-    DRI2CreateBuffer2ProcPtr CreateBuffer2;
-
-} DRI2ScreenRec;
-
-static DRI2ScreenPtr
-DRI2GetScreen(ScreenPtr pScreen)
-{
-    return dixLookupPrivate(&pScreen->devPrivates, dri2ScreenPrivateKey);
-}
 
 static DRI2DrawablePtr
 DRI2GetDrawable(DrawablePtr pDraw)
@@ -406,7 +370,7 @@ allocate_or_reuse_buffer(DrawablePtr pDraw, DRI2ScreenPtr ds,
         || attachment == DRI2BufferFrontLeft
         || !dimensions_match || (pPriv->buffers[old_buf]->format != format)) {
         if (*ds->CreateBuffer2)
-            *buffer = (*ds->CreateBuffer2) (pDraw, attachment, format, pPriv->prime_id);
+            *buffer = (*ds->CreateBuffer2) (pDraw, attachment, format, pPriv->prime_id, pDraw->width, pDraw->height);
         else
             *buffer = (*ds->CreateBuffer) (pDraw, attachment, format);
         pPriv->serialNumber = DRI2DrawableSerial(pDraw);
@@ -1129,7 +1093,7 @@ DRI2Connect(ClientPtr client, ScreenPtr pScreen,
 
     if (ds->GetDriverInfo) {
         ret = ds->GetDriverInfo(pScreen, driverType, &prime_id,
-                                driverName, deviceName);
+                                fd, driverName, deviceName);
         if (ret == FALSE)
             return ret;
     } else {
@@ -1139,8 +1103,8 @@ DRI2Connect(ClientPtr client, ScreenPtr pScreen,
 
         *driverName = ds->driverNames[driverType];
         *deviceName = ds->deviceName;
+        *fd = ds->fd;
     }
-    *fd = ds->fd;
 
     if (client) {
         DRI2ClientPtr dri2_client;
@@ -1243,6 +1207,10 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
     if (!DRI2InitPrivates())
         return FALSE;
 
+    if (!drv_dri2_hook)
+        drv_dri2_hook = impedDRI2ScreenInit;
+            
+
     ds = calloc(1, sizeof *ds);
     if (!ds)
         return FALSE;
@@ -1279,6 +1247,10 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
         ds->CreateBuffer2 = info->CreateBuffer2;
         ds->AuthMagic2 = info->AuthMagic2;
         ds->GetDriverInfo = info->GetDriverInfo;
+
+	ds->CreateBufferPixmap = info->CreateBufferPixmap;
+	ds->DestroyBufferPixmap = info->DestroyBufferPixmap;
+	ds->CopyRegionPixmap = info->CopyRegionPixmap;
     }
 
     /*

@@ -178,17 +178,26 @@ typedef Bool (*DRI2SwapLimitValidateProcPtr) (DrawablePtr pDraw,
 typedef Bool (*DRI2GetDriverInfoProcPtr)(ScreenPtr pScreen,
                                          int driverType,
                                          uint32_t *is_prime,
+                                         int *fd,
                                          const char **drivername,
                                          const char **deviceName);
 
 typedef DRI2BufferPtr (*DRI2CreateBuffer2ProcPtr)(DrawablePtr pDraw,
                                                   unsigned int attachment,
                                                   unsigned int format,
-                                                  unsigned int prime_id);
+                                                  unsigned int prime_id, int w, int h);
 
 typedef int (*DRI2AuthMagic2ProcPtr)(ScreenPtr pScreen, 
                                      int prime_id,
                                      uint32_t magic);
+
+typedef PixmapPtr (*DRI2CreateBufferPixmapProcPtr)(ScreenPtr pScreen,
+                                                   PixmapPtr pPixmap,
+                                                   unsigned int attachment,
+                                                   unsigned int format,
+                                                   int w, int h,
+                                                   uint32_t *name);
+typedef void (*DRI2DestroyBufferPixmapProcPtr)(PixmapPtr pPixmap);
 
 typedef void (*DRI2CopyPixmapPtrCB)(PixmapPtr src, PixmapPtr dst,
                                     RegionPtr pRegion, RegionPtr front_clip);
@@ -233,11 +242,15 @@ typedef struct {
     DRI2ReuseBufferNotifyProcPtr ReuseBufferNotify;
     DRI2SwapLimitValidateProcPtr SwapLimitValidate;
 
-    /* added in version 7 */
+    /* added in version 7 for driver -> impedance layer */
     DRI2GetDriverInfoProcPtr GetDriverInfo;
     DRI2AuthMagic2ProcPtr AuthMagic2;
     DRI2CreateBuffer2ProcPtr CreateBuffer2;
 
+    /* new driver interfaces in version 7 */
+    DRI2CreateBufferPixmapProcPtr CreateBufferPixmap;
+    DRI2DestroyBufferPixmapProcPtr DestroyBufferPixmap;
+    DRI2CopyRegionPixmapProcPtr CopyRegionPixmap;
     
 } DRI2InfoRec, *DRI2InfoPtr;
 
@@ -341,6 +354,7 @@ enum DRI2FrameEventType {
         DRI2_SWAP,
         DRI2_FLIP,
         DRI2_WAITMSC,
+        DRI2_SWAP_CHAIN,
 };
 
 typedef struct _DRI2FrameEvent {
@@ -367,4 +381,6 @@ extern _X_EXPORT void DRI2FlipEventHandler(DRI2FrameEventPtr flip,
                                            unsigned int frame,
                                            unsigned int tv_sec,
                                            unsigned int tv_usec);
+
+
 #endif
