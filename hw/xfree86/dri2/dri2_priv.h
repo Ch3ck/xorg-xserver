@@ -31,6 +31,9 @@ typedef struct _DRI2Screen {
     DRI2DestroyBufferPixmapProcPtr DestroyBufferPixmap;
     DRI2CopyRegionPixmapProcPtr CopyRegionPixmap;
 
+    DRI2ScheduleSwapPixmapProcPtr ScheduleSwapPixmap;
+    DRI2PageFlipPixmapProcPtr PageFlipPixmap;
+    DRI2ExchangePixmapProcPtr ExchangePixmap;
 } DRI2ScreenRec;
 
 typedef struct _DRI2Screen *DRI2ScreenPtr;

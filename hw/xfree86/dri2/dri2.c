@@ -1251,6 +1251,10 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
 	ds->CreateBufferPixmap = info->CreateBufferPixmap;
 	ds->DestroyBufferPixmap = info->DestroyBufferPixmap;
 	ds->CopyRegionPixmap = info->CopyRegionPixmap;
+
+	ds->ScheduleSwapPixmap = info->ScheduleSwapPixmap;
+	ds->PageFlipPixmap = info->PageFlipPixmap;
+	ds->ExchangePixmap = info->ExchangePixmap;
     }
 
     /*

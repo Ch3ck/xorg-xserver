@@ -175,6 +175,28 @@ typedef void (*DRI2InvalidateProcPtr) (DrawablePtr pDraw, void *data, XID id);
 typedef Bool (*DRI2SwapLimitValidateProcPtr) (DrawablePtr pDraw,
                                               int swap_limit);
 
+/* Version 7 structure */
+enum DRI2FrameEventType {
+        DRI2_SWAP,
+        DRI2_FLIP,
+        DRI2_WAITMSC,
+        DRI2_SWAP_CHAIN,
+};
+
+typedef struct _DRI2FrameEvent {
+        XID drawable_id;
+        ClientPtr client;
+        enum DRI2FrameEventType type;
+        uint64_t frame;
+
+        /* for swaps & flips only */
+        DRI2SwapEventPtr event_complete;
+        void *event_data;
+        DRI2BufferPtr front;
+        DRI2BufferPtr back;
+        void *driverPrivate;
+} DRI2FrameEventRec, *DRI2FrameEventPtr;
+
 typedef Bool (*DRI2GetDriverInfoProcPtr)(ScreenPtr pScreen,
                                          int driverType,
                                          uint32_t *is_prime,
@@ -205,6 +227,21 @@ typedef void (*DRI2CopyPixmapPtrCB)(PixmapPtr src, PixmapPtr dst,
 typedef void (*DRI2CopyRegionPixmapProcPtr)(PixmapPtr src, PixmapPtr dst,
                                             RegionPtr pRegion, RegionPtr f_c,
                                             DRI2CopyPixmapPtrCB cb);
+
+typedef int (*DRI2ScheduleSwapPixmapProcPtr) (PixmapPtr pDraw,
+                                              RegionPtr f_c,
+                                              DRI2FrameEventPtr swap_info,
+                                              CARD64 * target_msc,
+                                              CARD64 divisor,
+                                              CARD64 remainder,
+                                              Bool can_flip);
+
+typedef int (*DRI2PageFlipPixmapProcPtr)(DRI2FrameEventPtr flip_info,
+                                         PixmapPtr back_pixmap,
+                                         RegionPtr f_c);
+
+typedef int (*DRI2ExchangePixmapProcPtr)(PixmapPtr front, PixmapPtr back);
+
 /**
  * Version of the DRI2InfoRec structure defined in this header
  */
@@ -251,7 +288,9 @@ typedef struct {
     DRI2CreateBufferPixmapProcPtr CreateBufferPixmap;
     DRI2DestroyBufferPixmapProcPtr DestroyBufferPixmap;
     DRI2CopyRegionPixmapProcPtr CopyRegionPixmap;
-    
+    DRI2ScheduleSwapPixmapProcPtr ScheduleSwapPixmap;
+    DRI2PageFlipPixmapProcPtr PageFlipPixmap;
+    DRI2ExchangePixmapProcPtr ExchangePixmap;
 } DRI2InfoRec, *DRI2InfoPtr;
 
 extern _X_EXPORT int DRI2EventBase;
@@ -349,27 +388,6 @@ extern _X_EXPORT void DRI2WaitMSCComplete(ClientPtr client, DrawablePtr pDraw,
                                           int frame, unsigned int tv_sec,
                                           unsigned int tv_usec);
 
-/* Version 7 structure */
-enum DRI2FrameEventType {
-        DRI2_SWAP,
-        DRI2_FLIP,
-        DRI2_WAITMSC,
-        DRI2_SWAP_CHAIN,
-};
-
-typedef struct _DRI2FrameEvent {
-        XID drawable_id;
-        ClientPtr client;
-        enum DRI2FrameEventType type;
-        uint64_t frame;
-
-        /* for swaps & flips only */
-        DRI2SwapEventPtr event_complete;
-        void *event_data;
-        DRI2BufferPtr front;
-        DRI2BufferPtr back;
-        void *driverPrivate;
-} DRI2FrameEventRec, *DRI2FrameEventPtr;
 
 extern _X_EXPORT void DRI2FrameEventHandler(DRI2FrameEventPtr event,
                                             unsigned int frame,

@@ -54,6 +54,61 @@ DRI2GetScreenPrime(ScreenPtr master, int prime_id)
     return DRI2GetScreen(slave);
 }
 
+static void init_front_region(DrawablePtr pDraw, RegionPtr region)
+{
+    RegionInit(region, NULL, 0);
+
+    if (pDraw->type == DRAWABLE_WINDOW) {
+        WindowPtr pWin = (WindowPtr)pDraw;
+        if (!RegionNil(&pWin->clipList))
+            RegionUnion(region, region, &pWin->clipList);
+        else
+            RegionUnion(region, region, &pWin->winSize);
+
+        if (!RegionNil(region))
+          return;
+    }
+    {
+        BoxRec box;
+        RegionRec boxrec;
+
+        box.x1 = pDraw->x;
+        box.y1 = pDraw->y;
+        box.x2 = pDraw->x + pDraw->width;
+        box.y2 = pDraw->y + pDraw->height;
+        RegionInit(&boxrec, &box, 1);
+        RegionUnion(region, region, &boxrec);
+        RegionUninit(&boxrec);
+    }
+}
+
+static void
+imped_dri2_reference_buffer(DRI2BufferPtr buffer)
+{
+    impedDRI2BufferPrivatePtr private = buffer->driverPrivate;
+
+    private->refcnt++;
+}
+
+static void
+imped_dri2_unref_buffer(PixmapPtr pPixmap, DRI2BufferPtr buffer)
+{
+    impedDRI2BufferPrivatePtr private;
+
+    if (!buffer)
+	return;
+
+    private = buffer->driverPrivate;
+    if (--private->refcnt == 0) {
+	if (private->pixmap) {
+	    DRI2ScreenPtr gpu_ds = DRI2GetScreen(private->pixmap->drawable.pScreen);
+	    gpu_ds->DestroyBufferPixmap(private->pixmap);
+	}
+	free(private);
+	free(buffer);
+    }
+}
+
 static Bool imped_dri2_get_driver_info(ScreenPtr pScreen,
                                        int driverType,
                                        uint32_t *is_prime,
@@ -140,16 +195,7 @@ static void imped_dri2_destroy_buffer(DrawablePtr pDraw,
 
     if (!buffer)
 	return;
-
-    private = buffer->driverPrivate;
-    if (--private->refcnt == 0) {
-	if (private->pixmap) {
-	    DRI2ScreenPtr gpu_ds = DRI2GetScreen(private->pixmap->drawable.pScreen);
-	    gpu_ds->DestroyBufferPixmap(private->pixmap);
-	}
-	free(private);
-	free(buffer);
-    }
+    imped_dri2_unref_buffer(NULL, buffer);
 }
 
 static void
@@ -216,33 +262,74 @@ static int imped_dri2_schedule_swap(ClientPtr client,
                                     DrawablePtr pDraw,
                                     DRI2BufferPtr pDestBuffer,
                                     DRI2BufferPtr pSrcBuffer,
-                                    CARD64 * target_msc,
+                                    CARD64 *target_msc,
                                     CARD64 divisor,
                                     CARD64 remainder,
                                     DRI2SwapEventPtr func, void *data)
 {
     ScreenPtr pScreen = pDraw->pScreen;
     PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
-    //    DRI2ScreenPtr gpu_ds = DRI2GetScreenPrime(pDraw->pScreen, buffer->prime_id);
+    PixmapPtr gpuPixmap = pPixmap->gpu[pScreen->primary_gpu_index];
+    int index = pScreen->primary_gpu_index;
+    DRI2ScreenPtr gpu_ds = DRI2GetScreen(gpuPixmap->drawable.pScreen);
     BoxRec box;
     RegionRec region;
+    int ret;
+    DRI2FrameEventPtr swap_info = NULL;
+    enum DRI2FrameEventType swap_type = DRI2_SWAP;
+    Bool can_flip = DRI2CanFlip(pDraw); //can exchange
 
+    if (!gpu_ds->ScheduleSwapPixmap)
+	goto blit_fallback;
+
+    init_front_region(pDraw, &region);
+ 
+    swap_info = calloc(1, sizeof(DRI2FrameEventRec));
+    if (!swap_info)
+	goto blit_fallback;
+    
+    swap_info->drawable_id = pDraw->id;
+    swap_info->client = client;
+    swap_info->event_complete = func;
+    swap_info->event_data = data;
+    swap_info->front = pDestBuffer;
+    swap_info->back = pSrcBuffer;
+
+    imped_dri2_reference_buffer(pDestBuffer);
+    imped_dri2_reference_buffer(pSrcBuffer);
+
+    ret = gpu_ds->ScheduleSwapPixmap(gpuPixmap, &region,
+			       swap_info, target_msc,
+			       divisor, remainder, can_flip);
+
+    RegionUninit(&region);
+    if (ret == TRUE)
+	return TRUE;
+    
  blit_fallback:
     box.x1 = 0;
     box.y1 = 0;
     box.x2 = pDraw->width;
     box.y2 = pDraw->height;
-
     RegionInit(&region, &box, 0);
 
     imped_dri2_copy_region(pDraw, &region, pDestBuffer, pSrcBuffer);
+
     DRI2SwapComplete(client, pDraw, 0, 0, 0, DRI2_BLIT_COMPLETE, func, data);
+    *target_msc = 0; /* offscreen, so zero out target vblank count */
     return TRUE;
 }
 
 static int imped_dri2_get_msc(DrawablePtr pDraw, CARD64 *ust, CARD64 *msc)
 {
-    return 0;
+    PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
+    ScreenPtr gpuScreen = pDraw->pScreen->gpu[pDraw->pScreen->primary_gpu_index];
+    DRI2ScreenPtr gpu_ds = DRI2GetScreen(gpuScreen);
+    PixmapPtr gpuPixmap = pPixmap->gpu[pDraw->pScreen->primary_gpu_index];
+    int ret;
+ 
+    ret = gpu_ds->GetMSC(&gpuPixmap->drawable, ust, msc);
+    return ret;
 }
 
 Bool impedDRI2ScreenInit(ScreenPtr screen)
@@ -267,4 +354,82 @@ Bool impedDRI2ScreenInit(ScreenPtr screen)
     DRI2ScreenInit(screen, &info);
 
     return TRUE;
+}
+
+void DRI2FrameEventHandler(DRI2FrameEventPtr event,
+			   unsigned int frame,
+			   unsigned int tv_sec,
+			   unsigned int tv_usec,
+			   Bool can_flip)
+{
+    DrawablePtr drawable;
+    int status;
+
+    status = dixLookupDrawable(&drawable, event->drawable_id, serverClient,
+                               M_ANY, DixWriteAccess);
+
+    if (status != Success) {
+        imped_dri2_unref_buffer(NULL, event->front);
+        imped_dri2_unref_buffer(NULL, event->back);
+        free(event);
+        return;
+    }
+
+    ErrorF("frame event handler %d:\n", event->type);
+    switch (event->type) {
+    case DRI2_FLIP:
+	break;
+    case DRI2_SWAP: {
+	int swap_type;
+	if (DRI2CanExchange(drawable) && 0) {
+	    /* TODO */
+	} 
+	else {
+	    BoxRec box;
+	    RegionRec region;
+	    box.x1 = 0;
+	    box.y1 = 0;
+	    box.x2 = drawable->width;
+	    box.y2 = drawable->height;
+	    RegionInit(&region, &box, 0);
+	    imped_dri2_copy_region(drawable, &region,
+				   event->front, event->back);
+	}
+	DRI2SwapComplete(event->client, drawable, frame, tv_sec,
+			 tv_usec, swap_type, event->event_complete,
+			 event->event_data);
+    }
+    case DRI2_WAITMSC:
+	DRI2WaitMSCComplete(event->client, drawable, frame, tv_sec, tv_usec);
+	break;
+    default:
+	break;
+    }
+
+    imped_dri2_unref_buffer(NULL, event->front);
+    imped_dri2_unref_buffer(NULL, event->back);
+    free(event);
+}
+
+void DRI2FlipEventHandler(DRI2FrameEventPtr flip,
+			  unsigned int frame,
+			  unsigned int tv_sec,
+			  unsigned int tv_usec)
+{
+    int status;
+    DrawablePtr drawable;
+
+    status = dixLookupDrawable(&drawable, flip->drawable_id, serverClient,
+                               M_ANY, DixWriteAccess);    
+    if (status != Success) {
+        free(flip);
+        return;
+    }
+    switch (flip->type) {
+    case DRI2_SWAP:
+	break;
+    default:
+	break;
+    }
+    free(flip);
 }
