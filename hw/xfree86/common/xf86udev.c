@@ -156,6 +156,7 @@ udev_find_pci_info(int index)
 	}
 
 	xf86_udev_devices[index].pdev = info;
+	pci_device_probe(info);
     }
     pci_iterator_destroy(iter); 
 
@@ -191,7 +192,7 @@ xf86_check_udev_slot(const struct xf86_udev_device *ud)
     for (i = 0; i < xf86NumEntities; i++) {
 	const EntityPtr u = xf86Entities[i];
 
-	if ((u->bus.type == BUS_UDEV) && (ud == u)) {
+	if ((u->bus.type == BUS_UDEV) && (ud == u->bus.id.udev)) {
 	    return FALSE;
 	}
     }
@@ -282,16 +283,18 @@ int xf86udevProbeDev(DriverPtr drvp)
 			&& PCI_ID_COMPARE(devices[k].device_id, device_id)
 			&& ((devices[k].device_class_mask & pPci->device_class)
 			    ==  devices[k].device_class)) {
-			entity = xf86ClaimUdevSlot(&xf86_udev_devices[j],
-						   drvp, 0, devList[i], devList[i]->active);
-			if (entity != -1) {
-			    if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], devices[k].match_data))
-				continue;
-			    foundScreen = TRUE;
-			    break;
+			if (xf86_check_udev_slot(&xf86_udev_devices[j])) {
+			    entity = xf86ClaimUdevSlot(&xf86_udev_devices[j],
+						       drvp, 0, devList[i], devList[i]->active);
+			    if (entity != -1) {
+				if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], devices[k].match_data))
+				    continue;
+				foundScreen = TRUE;
+				break;
+			    }
+			    else
+				xf86UnclaimUdevSlot(&xf86_udev_devices[j]);
 			}
-			else
-			    xf86UnclaimUdevSlot(&xf86_udev_devices[j]);
 		    }
 		}
 	    } else if (xf86_udev_devices[j].pdev && !devices)
