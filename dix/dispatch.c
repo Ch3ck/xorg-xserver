@@ -3834,6 +3834,9 @@ AddGPUScreen(Bool (*pfnInit) (ScreenPtr /*pScreen */ ,
     pScreen->ClipNotify = 0;    /* for R4 ddx compatibility */
     pScreen->CreateScreenResources = 0;
     pScreen->isGPU = TRUE;
+    /* gpu screens should have offload and output slave lists */
+    xorg_list_init(&pScreen->offload_slave_list);
+    xorg_list_init(&pScreen->output_slave_list);
 
     /*
      * This loop gets run once for every Screen that gets added,

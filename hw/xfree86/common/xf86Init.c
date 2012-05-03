@@ -848,6 +848,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
         scr_index = AddGPUScreen(xf86GPUScreens[i]->ScreenInit, argc, argv);
         if (scr_index == i) {
             xf86GPUScreens[i]->pScreen = screenInfo.gpuscreens[i];
+	    xf86GPUScreens[i]->pScreen->roles = xf86GPUScreens[i]->roles;
             dixSetPrivate(&xf86GPUScreens[i]->pScreen->devPrivates,
                           xf86ScreenKey, xf86GPUScreens[i]);
 

@@ -98,6 +98,7 @@ retry:
 
         if (xf86GPUScreens[i]->roles & ROLE_SLAVE_OFFLOAD) {
             ErrorF("want to attach %s as offload slave\n", xf86GPUScreens[i]->driverName);
+            impedAttachOffloadSlave(master->pScreen, xf86GPUScreens[i]->pScreen, 0);
             xf86GPUScreens[i]->current_role = ROLE_SLAVE_OFFLOAD;
         }
     }
@@ -109,6 +110,7 @@ retry:
         if (xf86GPUScreens[i]->current_role)
             continue;
         ErrorF("want tot attach %s to unbound list\n", xf86GPUScreens[i]->driverName);
+        impedAttachUnboundScreen(pScreen, xf86GPUScreens[i]->pScreen);
     }
 
     if (!impedFinishScreenInit(pScreen, NULL, width, height,

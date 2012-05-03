@@ -351,10 +351,10 @@ impedSetupScreen(ScreenPtr pScreen)
 
     //    drvmiSetZeroLineBias(pScreen, DEFAULTZEROLINEBIAS);
 
-    //    xorg_list_init(&pScreen->unattached_list);
     xorg_list_init(&pScreen->gpu_screen_list);
-    xorg_list_init(&pScreen->offload_slave_list);
-    xorg_list_init(&pScreen->output_slave_list);
+    /* protocol screen should have no offload/output slaves attached directly
+       to it they are attached to the respective masters - don't
+       init the lists so we spot failure */
     xorg_list_init(&pScreen->unattached_list);
     return TRUE;
 }
@@ -396,48 +396,64 @@ Bool impedFinishScreenInit(ScreenPtr pScreen,
     return TRUE;
 }
 
+/* attach a gpu screen to a list on the protocol screen of unbound screens */
 void
 impedAttachUnboundScreen(ScreenPtr pScreen, ScreenPtr new)
 {
+    assert(!pScreen->isGPU);
+    assert(new->isGPU);
     xorg_list_add(&new->unattached_head, &pScreen->unattached_list);
 }
 
+/* attach a gpu screen to a protocol screen */
 void
 impedAttachScreen(ScreenPtr pScreen, ScreenPtr slave)
 {
+    assert(!pScreen->isGPU);
+    assert(slave->isGPU);
     xorg_list_add(&slave->gpu_screen_head, &pScreen->gpu_screen_list);
     slave->protocol_master = pScreen;
     pScreen->gpu[pScreen->num_gpu] = slave;
     pScreen->num_gpu++;
 }
 
+/* attach a gpu screen as an output slave to another gpu screen */
 void
-impedAttachOutputSlave(ScreenPtr pScreen, ScreenPtr slave, int index)
+impedAttachOutputSlave(ScreenPtr master, ScreenPtr slave, int index)
 {
-    xorg_list_add(&slave->output_head, &pScreen->output_slave_list);
-    slave->protocol_master = pScreen;
-    slave->output_master = pScreen;
+    assert(master->isGPU);
+    assert(slave->isGPU);
+    xorg_list_add(&slave->output_head, &master->output_slave_list);
+    slave->protocol_master = master->protocol_master;
+    slave->output_master = master;
+}
+
+/* attach a gpu screen as an offload slave to another gpu screen */
+void
+impedAttachOffloadSlave(ScreenPtr master, ScreenPtr slave, int index)
+{
+    assert(master->isGPU);
+    assert(slave->isGPU);
+    xorg_list_add(&slave->offload_head, &master->offload_slave_list);
+    slave->protocol_master = master->protocol_master;
+    slave->offload_master = master;
 }
 
 void
-impedAttachOffloadSlave(ScreenPtr pScreen, ScreenPtr slave, int index)
+impedDetachOutputSlave(ScreenPtr master, ScreenPtr slave)
 {
-    xorg_list_add(&slave->offload_head, &pScreen->offload_slave_list);    
-    slave->protocol_master = pScreen;
-    slave->offload_master = pScreen;
-}
-
-void
-impedDetachOutputSlave(ScreenPtr pScreen, ScreenPtr slave)
-{
+    assert(master->isGPU);
+    assert(slave->isGPU);
     xorg_list_del(&slave->output_head);
     slave->output_master = NULL;
     slave->protocol_master = NULL;
 }
 
 void
-impedDetachOffloadSlave(ScreenPtr pScreen, ScreenPtr slave)
+impedDetachOffloadSlave(ScreenPtr master, ScreenPtr slave)
 {
+    assert(master->isGPU);
+    assert(slave->isGPU);
     xorg_list_del(&slave->offload_head);
     slave->offload_master = NULL;
     slave->protocol_master = NULL;
