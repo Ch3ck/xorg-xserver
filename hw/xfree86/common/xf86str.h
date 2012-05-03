@@ -814,6 +814,7 @@ typedef struct _ScrnInfoRec {
 
     Bool is_gpu;
     uint32_t roles;
+    uint32_t current_role;
 } ScrnInfoRec;
 
 typedef struct {

@@ -52,11 +52,19 @@ retry:
     for (i = 0; i < xf86NumGPUScreens; i++) {
 	if (xf86GPUScreens[i]->confScreen->screennum != pScreen->myNum)
             continue;
-	
+
+	if (allow_slave) {
+            if (!(xf86GPUScreens[i]->roles & ROLE_SLAVE_OUTPUT))
+                continue;
+        }
+        else if (!(xf86GPUScreens[i]->roles & ROLE_MASTER))
+            continue;
+
 	if (xf86GPUScreens[i]->numEntities != 1)
             continue;
-	//	if (!xf86IsEntityPrimary(xf86GPUScreens[i]->entityList[0]))
-	//  continue;
+
+        if (!xf86IsEntityPrimary(xf86GPUScreens[i]->entityList[0]))
+            continue;
 
 	master = xf86GPUScreens[i];
 
@@ -65,12 +73,44 @@ retry:
                 
         if (xf86GPUScreens[i]->virtualY > height)
             height = xf86GPUScreens[i]->virtualY;
+        ErrorF("attaching %s as primary master\n", xf86GPUScreens[i]->driverName);
 	impedAttachScreen(pScreen, xf86GPUScreens[i]->pScreen);
+        xf86GPUScreens[i]->current_role = ROLE_MASTER;
 	break;
     }
 
-    if (!master)
-      return FALSE;
+    
+    if (!master && !allow_slave) {
+        allow_slave = TRUE;
+        goto retry;
+    }
+    if (!master) {
+        ErrorF("cannot find master device\n");
+        return FALSE;
+    }
+
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        if (xf86GPUScreens[i]->confScreen->screennum != pScreen->myNum)
+            continue;
+
+        if (xf86GPUScreens[i]->current_role)
+            continue;
+
+        if (xf86GPUScreens[i]->roles & ROLE_SLAVE_OFFLOAD) {
+            ErrorF("want to attach %s as offload slave\n", xf86GPUScreens[i]->driverName);
+            xf86GPUScreens[i]->current_role = ROLE_SLAVE_OFFLOAD;
+        }
+    }
+
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        if (xf86GPUScreens[i]->confScreen->screennum != pScreen->myNum)
+            continue;
+
+        if (xf86GPUScreens[i]->current_role)
+            continue;
+        ErrorF("want tot attach %s to unbound list\n", xf86GPUScreens[i]->driverName);
+    }
+
     if (!impedFinishScreenInit(pScreen, NULL, width, height,
                                75, 75,
                                master->displayWidth, master->bitsPerPixel))
