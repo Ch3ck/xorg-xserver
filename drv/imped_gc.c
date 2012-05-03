@@ -670,7 +670,7 @@ impedCopyNtoN (DrawablePtr	pSrcDrawable,
     }
 
     for (i = 0; i < pSrcDrawable->pScreen->num_gpu; i++) {
-	copy = pSrcDrawable->pScreen->gpu[i]->GetCopyAreaFunction(&pSrcPixmap->drawable, &pDstPixmap->drawable);
+	copy = pSrcDrawable->pScreen->gpu[i]->GetCopyAreaFunction(&pSrcPixmap->gpu[i]->drawable, &pDstPixmap->gpu[i]->drawable);
 
 	if (pGC) {
 	    pDrvGC = pGC->gpu[i];
