@@ -216,6 +216,7 @@ xf86AllocateGPUScreen(DriverPtr drv, int flags)
      */
 
     xf86GPUScreens[i]->drv = drv;
+    xf86GPUScreens[i]->is_gpu = TRUE;
     drv->refCount++;
     xf86GPUScreens[i]->module = DuplicateModule(drv->module, NULL);
 

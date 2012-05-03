@@ -768,6 +768,7 @@ typedef struct _ScrnInfoRec {
     ClockRangePtr clockRanges;
     int adjustFlags;
 
+    Bool is_gpu;
     /*
      * These can be used when the minor ABI version is incremented.
      * The NUM_* parameters must be reduced appropriately to keep the
