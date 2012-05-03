@@ -171,6 +171,8 @@ typedef struct {
     GlyphsProcPtr SavedGlyphs;
     TrapezoidsProcPtr SavedTrapezoids;
     AddTrapsProcPtr SavedAddTraps;
+    GetCopyAreaFunctionProcPtr SavedGetCopyAreaFunction;
+    GetCopyPlaneFunctionProcPtr SavedGetCopyPlaneFunction;
     void (*do_migration) (ExaMigrationPtr pixmaps, int npixmaps,
                           Bool can_accel);
     Bool (*pixmap_has_gpu_copy) (PixmapPtr pPixmap);

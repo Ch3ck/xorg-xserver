@@ -678,6 +678,31 @@ exaBitmapToRegion(PixmapPtr pPix)
     return ret;
 }
 
+static miCopyProc
+exaGetCopyAreaFunction(DrawablePtr pSrc,
+                       DrawablePtr pDst)
+{
+    ExaScreenPriv (pDst->pScreen);
+
+    if (pExaScr->fallback_counter || pExaScr->swappedOut)
+      return ExaCheckCopyNtoN;
+    else
+      return exaCopyNtoN;
+}
+
+static miCopyProc
+exaGetCopyPlaneFunction(DrawablePtr pSrc,
+                        DrawablePtr pDst, int bitplane)
+{
+    ExaScreenPriv (pDst->pScreen);
+    miCopyProc copy;
+
+    copy = pExaScr->SavedGetCopyPlaneFunction(pSrc, pDst, bitplane);
+    if (!copy)
+        return NULL;
+    return NULL;//ExaCheckCopyPlaneNtoN;
+}
+
 static Bool
 exaCreateScreenResources(ScreenPtr pScreen)
 {
@@ -791,6 +816,10 @@ exaCloseScreen(ScreenPtr pScreen)
         unwrap(pExaScr, pScreen, SharePixmapBacking);
     if (pExaScr->SavedSetSharedPixmapBacking)
         unwrap(pExaScr, pScreen, SetSharedPixmapBacking);
+    if (pExaScr->SavedGetCopyAreaFunction)
+	unwrap(pExaScr, pScreen, GetCopyAreaFunction);
+    if (pExaScr->SavedGetCopyPlaneFunction)
+	unwrap(pExaScr, pScreen, GetCopyPlaneFunction);
     unwrap(pExaScr, ps, Composite);
     if (pExaScr->SavedGlyphs)
         unwrap(pExaScr, ps, Glyphs);
@@ -947,7 +976,8 @@ exaDriverInit(ScreenPtr pScreen, ExaDriverPtr pScreenInfo)
     wrap(pExaScr, pScreen, ChangeWindowAttributes, exaChangeWindowAttributes);
     wrap(pExaScr, pScreen, BitmapToRegion, exaBitmapToRegion);
     wrap(pExaScr, pScreen, CreateScreenResources, exaCreateScreenResources);
-
+    wrap(pExaScr, pScreen, GetCopyAreaFunction, exaGetCopyAreaFunction);
+    wrap(pExaScr, pScreen, GetCopyPlaneFunction, exaGetCopyPlaneFunction);
     if (ps) {
         wrap(pExaScr, ps, Composite, exaComposite);
         if (pScreenInfo->PrepareComposite) {
