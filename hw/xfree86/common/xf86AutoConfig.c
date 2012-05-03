@@ -258,8 +258,10 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
             matches[i++] = xnfstrdup(sbusDriver);
     }
 #endif
+    i = xf86udevMatchDriver(matches, nmatches);
 #ifdef XSERVER_LIBPCIACCESS
-    i = xf86PciMatchDriver(matches, nmatches);
+    if (i == 0)
+        i = xf86PciMatchDriver(matches, nmatches);
 #endif
     /* Fallback to platform default hardware */
     if (i < (nmatches - 1)) {
