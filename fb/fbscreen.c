@@ -139,7 +139,7 @@ fbSetupScreen(ScreenPtr pScreen, pointer pbits, /* pointer to screen bitmap */
     pScreen->GetWindowPixmap = _fbGetWindowPixmap;
     pScreen->SetWindowPixmap = _fbSetWindowPixmap;
 
-    if (pScreen->isDrv) {
+    if (pScreen->isGPU) {
         pScreen->GetCopyAreaFunction = fbGetCopyAreaFunction;
     }
     return TRUE;
@@ -222,7 +222,7 @@ fbFinishScreenInit(ScreenPtr pScreen,
     fbGetScreenPrivate(pScreen)->finishWrap = finishWrap;
 #endif
     rootdepth = 0;
-    if (!pScreen->isDrv) {
+    if (!pScreen->isGPU) {
 	if (!fbInitVisuals(&visuals, &depths, &nvisuals, &ndepths, &rootdepth,
 			   &defaultVisual, ((unsigned long) 1 << (imagebpp - 1)),
 			   8))

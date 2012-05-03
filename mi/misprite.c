@@ -314,9 +314,11 @@ miSpriteInitialize(ScreenPtr pScreen, miPointerScreenFuncPtr screenFuncs)
         free(pScreenPriv);
         return FALSE;
     }
-    for (pVisual = pScreen->visuals;
-         pVisual->vid != pScreen->rootVisual; pVisual++);
-    pScreenPriv->pVisual = pVisual;
+    if (!pScreen->isGPU) {
+      for (pVisual = pScreen->visuals;
+	   pVisual->vid != pScreen->rootVisual; pVisual++);
+      pScreenPriv->pVisual = pVisual;
+    }
     pScreenPriv->CloseScreen = pScreen->CloseScreen;
     pScreenPriv->GetImage = pScreen->GetImage;
     pScreenPriv->GetSpans = pScreen->GetSpans;

@@ -3833,7 +3833,7 @@ AddGPUScreen(Bool (*pfnInit) (ScreenPtr /*pScreen */ ,
     pScreen->totalPixmapSize = 0;       /* computed in CreateScratchPixmapForScreen */
     pScreen->ClipNotify = 0;    /* for R4 ddx compatibility */
     pScreen->CreateScreenResources = 0;
-    pScreen->isDrv = TRUE;
+    pScreen->isGPU = TRUE;
 
     /*
      * This loop gets run once for every Screen that gets added,

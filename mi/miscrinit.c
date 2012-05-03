@@ -148,7 +148,7 @@ miCreateScreenResources(ScreenPtr pScreen)
         /* create a pixmap with no data, then redirect it to point to
          * the screen
          */
-        if (!pScreen->isDrv) {
+        if (!pScreen->isGPU) {
             pPixmap =
                 (*pScreen->CreatePixmap) (pScreen, 0, 0, pScreen->rootDepth, 0);
             if (!pPixmap)
