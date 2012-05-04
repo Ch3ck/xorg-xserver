@@ -28,22 +28,6 @@ static void finish_shatter_clip(RegionPtr orig_region, PicturePtr pDrvPicture)
     RegionCopy(pDrvPicture->pCompositeClip, orig_region);
 }
 
-static Bool CreateSourcePict(PicturePtr pPicture, PictureScreenPtr ps, int num_gpu)
-{
-    int i;
-    int error;
-
-    for (i = 0; i < num_gpu; i++) {
-	if (!pPicture->gpu[i]) {
-	    pPicture->gpu[i] = CreatePicture(0, NULL, pPicture->pFormat, 0, NULL, serverClient, &error);
-	    if (!pPicture->gpu[i])
-		return FALSE;
-	}
-    }
-    return TRUE;
-}
-
-
 static void
 impedComposite (CARD8      op,
 		PicturePtr pSrc,
@@ -68,12 +52,6 @@ impedComposite (CARD8      op,
     if (pSrc->pDrawable) {
 	pSrcPixmap = GetDrawablePixmap(pSrc->pDrawable);
     } 
-    else {
-	Bool ret;
-	ret = CreateSourcePict(pSrc, ps, pScreen->num_gpu);
-	if (!ret)
-	    return;
-    }
 	
     if (pMask) {
 	pMaskPixmap = GetDrawablePixmap(pMask->pDrawable);
@@ -104,7 +82,10 @@ impedComposite (CARD8      op,
 	PictureScreenPtr drv_ps;
 	RegionRec orig_src_region, orig_mask_region, orig_dst_region;
 
-	pDrvSrc = pSrc->gpu[i];
+	if (pSrc->pDrawable)
+	    pDrvSrc = pSrc->gpu[i];
+	else
+	    pDrvSrc = pSrc; /* solid/gradient pics */
 	if (pMask) {
 	    pDrvMask = pMask->gpu[i];
 	}
@@ -209,10 +190,6 @@ impedTrapezoids (CARD8	    op,
 	    impedGetDrawableDeltas(pSrc->pDrawable, pSrcPixmap, &x_off, &y_off);
 	    xSrc += x_off;
 	    ySrc += y_off;
-	} else {
-	    ret = CreateSourcePict(pSrc, ps, pScreen->num_gpu);
-	    if (!ret)
-		return;
 	}
     }
     
@@ -244,7 +221,10 @@ impedTrapezoids (CARD8	    op,
 	PicturePtr pDrvSrc = NULL, pDrvDst;
 
 	if (pSrc) {
-	    pDrvSrc = pSrc->gpu[i];
+            if (pSrc->pDrawable)
+                pDrvSrc = pSrc->gpu[i];
+            else
+                pDrvSrc = pSrc; /* source pict */
 	    if (pSrcPixmap)
 		pDrvSrc->pDrawable = &pSrcPixmap->gpu[i]->drawable;
 	    if (pDrvSrc) {
