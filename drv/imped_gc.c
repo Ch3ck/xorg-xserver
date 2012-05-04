@@ -86,8 +86,15 @@ impedValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 		pDrvGC->tile.pixmap->refcnt++;
 	    }
 	}
-	    
+        if (!pDrvGC->pCompositeClip) {
+            pDrvGC->freeCompClip = TRUE;
+            pDrvGC->pCompositeClip = RegionCreate(NULL, 0);
+        }
 	pDrvGC->funcs->ValidateGC(pDrvGC, changes, &pPixmap->gpu[i]->drawable);
+        /* overwrite the composite clip with the toplevel one -
+           probably could just avoid clipping down in fbgc.c 
+           fixes rendering with twm + xlogo in top corner */
+        RegionCopy(pDrvGC->pCompositeClip, pGC->pCompositeClip);
     }
 #ifdef COMPOSITE
     if (pDrawable->type == DRAWABLE_WINDOW) {
