@@ -693,7 +693,7 @@ PicturePtr GetGlyphPicture(GlyphPtr glyph, ScreenPtr pScreen)
         return GlyphPicture(glyph)[pScreen->myNum];
    
     pict = GlyphPicture(glyph)[pScreen->protocol_master->myNum];
-    for (i = 0; i < pScreen->protocol_master->myNum; i++)
+    for (i = 0; i < pScreen->protocol_master->num_gpu; i++)
         if (pScreen == pScreen->protocol_master->gpu[i])
             return pict->gpu[i];
     return NULL;
