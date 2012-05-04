@@ -62,6 +62,7 @@
 typedef XID RRMode;
 typedef XID RROutput;
 typedef XID RRCrtc;
+typedef XID RRProvider;
 
 extern _X_EXPORT int RREventBase, RRErrorBase;
 
@@ -78,6 +79,7 @@ typedef struct _rrPropertyValue RRPropertyValueRec, *RRPropertyValuePtr;
 typedef struct _rrProperty RRPropertyRec, *RRPropertyPtr;
 typedef struct _rrCrtc RRCrtcRec, *RRCrtcPtr;
 typedef struct _rrOutput RROutputRec, *RROutputPtr;
+typedef struct _rrProvider RRProviderRec, *RRProviderPtr;
 
 struct _rrMode {
     int refcnt;
@@ -152,6 +154,14 @@ struct _rrOutput {
     void *devPrivate;
 };
 
+struct _rrProvider {
+    RRProvider id;
+    ScreenPtr pScreen; /* gpu screen more than likely */
+    int current_role;
+    int allowed_roles;
+    void *devPrivate;
+};
+
 #if RANDR_12_INTERFACE
 typedef Bool (*RRScreenSetSizeProcPtr) (ScreenPtr pScreen,
                                         CARD16 width,
@@ -196,6 +206,10 @@ typedef Bool (*RRSetPanningProcPtr) (ScreenPtr pScrn,
                                      BoxPtr trackingArea, INT16 *border);
 
 #endif                          /* RANDR_13_INTERFACE */
+
+typedef Bool (*RRProviderSetRoleProcPtr)(ScreenPtr pScreen,
+					 RRProviderPtr provider,
+					 int new_role);
 
 typedef Bool (*RRGetInfoProcPtr) (ScreenPtr pScreen, Rotation * rotations);
 typedef Bool (*RRCloseScreenProcPtr) (ScreenPtr pscreen);
@@ -246,6 +260,7 @@ typedef struct _rrScrPriv {
     RRGetPanningProcPtr rrGetPanning;
     RRSetPanningProcPtr rrSetPanning;
 #endif
+    RRProviderSetRoleProcPtr rrProviderSetRole;
 
     /*
      * Private part of the structure; not considered part of the ABI
@@ -288,6 +303,9 @@ typedef struct _rrScrPriv {
     int size;
 #endif
     Bool discontiguous;
+
+    int numProviders;
+    RRProviderPtr *providers;
 } rrScrPrivRec, *rrScrPrivPtr;
 
 extern _X_EXPORT DevPrivateKeyRec rrPrivKeyRec;
@@ -361,6 +379,16 @@ extern _X_EXPORT RESTYPE RRCrtcType, RRModeType, RROutputType;
 	    client->errorValue = id;\
 	    return rc;\
 	}\
+    }
+
+#define VERIFY_RR_PROVIDER(id, ptr, a)\
+    {\
+        int rc = dixLookupResourceByType((pointer *)&(ptr), id,\
+                                         RRProviderType, client, a);\
+        if (rc != Success) {\
+            client->errorValue = id;\
+            return rc;\
+        }\
     }
 
 #define GetRRClient(pClient)    ((RRClientPtr)dixLookupPrivate(&(pClient)->devPrivates, RRClientPrivateKey))
@@ -842,6 +870,28 @@ extern _X_EXPORT int
 
 extern _X_EXPORT int
  ProcRRDeleteOutputProperty(ClientPtr client);
+
+/* rrprovider.c */
+extern _X_EXPORT int
+ProcRRGetProviders(ClientPtr client);
+
+extern _X_EXPORT int
+ProcRRGetProviderInfo(ClientPtr client);
+
+extern _X_EXPORT int
+ProcRRSetProviderRole(ClientPtr client);
+
+extern _X_EXPORT Bool
+RRProviderInit(void);
+
+extern _X_EXPORT RRProviderPtr
+RRProviderCreate(ScreenPtr pScreen, void *devPrivate);
+
+extern _X_EXPORT void
+RRProviderDestroy (RRProviderPtr provider);
+
+extern _X_EXPORT Bool
+RRProviderLookup(XID id, RRProviderPtr *provider_p);
 
 /* rrxinerama.c */
 #ifdef XINERAMA

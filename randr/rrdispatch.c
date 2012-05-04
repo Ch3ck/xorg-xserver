@@ -241,4 +241,12 @@ int (*ProcRandrVector[RRNumberRequests]) (ClientPtr) = {
         ProcRRSetPanning,       /* 29 */
         ProcRRSetOutputPrimary, /* 30 */
         ProcRRGetOutputPrimary, /* 31 */
+        NULL,                   /* 32 */
+        NULL,                   /* 33 */
+        NULL,                   /* 34 */
+        NULL,                   /* 35 */
+        NULL,                   /* 36 */
+        ProcRRGetProviders,                   /* 37 */
+        ProcRRGetProviderInfo,                   /* 38 */
+        ProcRRSetProviderRole,                   /* 39 */
 };
