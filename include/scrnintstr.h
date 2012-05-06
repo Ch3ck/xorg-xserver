@@ -184,6 +184,8 @@ typedef void (*ClipNotifyProcPtr) (WindowPtr /*pWindow */ ,
 #define CREATE_PIXMAP_USAGE_BACKING_PIXMAP              2
 /* pixmap will contain a glyph */
 #define CREATE_PIXMAP_USAGE_GLYPH_PICTURE               3
+/* pixmap will be shared */
+#define CREATE_PIXMAP_USAGE_SHARED                      4
 
 typedef PixmapPtr (*CreatePixmapProcPtr) (ScreenPtr /*pScreen */ ,
                                           int /*width */ ,
