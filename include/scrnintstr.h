@@ -349,7 +349,7 @@ typedef void (*ConstrainCursorHarderProcPtr) (DeviceIntPtr, ScreenPtr, int,
                                               int *, int *);
 
 typedef miCopyProc (*GetCopyAreaFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
-typedef miCopyProc (*GetCopyPlaneFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
+typedef miCopyProc (*GetCopyPlaneFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst, int bitplane);
 
 typedef Bool (*SharePixmapBackingProcPtr)(PixmapPtr, int *);
 
