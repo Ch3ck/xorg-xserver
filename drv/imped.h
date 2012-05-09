@@ -96,9 +96,9 @@ impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 extern _X_EXPORT void
 impedPictureDuplicate(PicturePtr pPicture, int new_gpu_index);
 
-int
+extern _X_EXPORT int
 impedAddScreen(ScreenPtr protocol_master, ScreenPtr new);
 
-Bool
+extern _X_EXPORT Bool
 impedRemoveScreen(ScreenPtr protocol_master, ScreenPtr slave);
 #endif

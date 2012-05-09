@@ -50,6 +50,7 @@
 
 typedef struct _xf86Crtc xf86CrtcRec, *xf86CrtcPtr;
 typedef struct _xf86Output xf86OutputRec, *xf86OutputPtr;
+typedef struct _xf86Provider xf86ProviderRec, *xf86ProviderPtr;
 
 /* define a standard for connector types */
 typedef enum _xf86ConnectorType {
@@ -607,6 +608,16 @@ struct _xf86Output {
     INT16 initialBorder[4];
 };
 
+typedef struct _xf86Provider {
+    ScrnInfoPtr scrn;
+#ifdef RANDR_12_INTERFACE
+    RRProviderPtr randr_provider;
+#else
+    void *randr_provider;
+#endif
+};
+
+
 typedef struct _xf86CrtcConfigFuncs {
     /**
      * Requests that the driver resize the screen.
@@ -681,6 +692,7 @@ typedef struct _xf86CrtcConfig {
     /* callback when crtc configuration changes */
     xf86_crtc_notify_proc_ptr xf86_crtc_notify;
 
+    xf86ProviderPtr provider;
 } xf86CrtcConfigRec, *xf86CrtcConfigPtr;
 
 extern _X_EXPORT int xf86CrtcConfigPrivateIndex;
@@ -975,4 +987,9 @@ extern _X_EXPORT void
 extern _X_EXPORT Bool
  xf86_crtc_supports_gamma(ScrnInfoPtr pScrn);
 
+extern _X_EXPORT xf86ProviderPtr
+xf86ProviderCreate(ScrnInfoPtr scrn);
+
+void
+xf86SetCurrentRole(ScrnInfoPtr scrn, uint32_t role);
 #endif                          /* _XF86CRTC_H_ */

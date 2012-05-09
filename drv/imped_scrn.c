@@ -14,6 +14,7 @@
 #include "scrnintstr.h"
 #include "windowstr.h"
 #include "imped.h"
+#include "randrstr.h"
 #include "mi.h"
 #include "micmap.h"
 
@@ -464,13 +465,15 @@ impedDetachAllSlaves(ScreenPtr pScreen)
 {
     ScreenPtr iter, safe;
 
+    assert(pScreen->isGPU);
+
     xorg_list_for_each_entry_safe(iter, safe, &pScreen->offload_slave_list, offload_head) {
-        impedDetachOffloadSlave(iter->protocol_master, iter);
+        impedDetachOffloadSlave(pScreen, iter);
     }
 
 
     xorg_list_for_each_entry_safe(iter, safe, &pScreen->output_slave_list, output_head) {
-        impedDetachOutputSlave(iter->protocol_master, iter);
+        impedDetachOutputSlave(pScreen, iter);
     }
 
 }
@@ -478,5 +481,16 @@ impedDetachAllSlaves(ScreenPtr pScreen)
 void
 impedMigrateOutputSlaves(ScreenPtr pOldMaster, ScreenPtr pNewMaster)
 {
+    ScreenPtr iter, safe;
 
+    assert(pOldMaster->isGPU);
+    assert(pNewMaster->isGPU);
+
+    xorg_list_for_each_entry_safe(iter, safe, &pOldMaster->output_slave_list, output_head) {
+        if (iter == pNewMaster)
+            continue;
+        iter->output_master = pNewMaster;
+        xorg_list_del(&iter->output_head);
+        xorg_list_add(&iter->output_head, &pNewMaster->output_slave_list);
+    }
 }

@@ -3200,3 +3200,37 @@ xf86_crtc_supports_gamma(ScrnInfoPtr pScrn)
 
     return FALSE;
 }
+
+xf86ProviderPtr
+xf86ProviderCreate(ScrnInfoPtr scrn)
+{
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
+    xf86ProviderPtr provider;
+
+    if (xf86_config->provider)
+        return xf86_config->provider;
+
+    provider = calloc(sizeof(xf86ProviderRec), 1);
+    if (!provider)
+        return NULL;
+
+    provider->scrn = scrn;
+#ifdef RANDR_12_INTERFACE
+    provider->randr_provider = NULL;
+#endif
+
+    xf86_config->provider = provider;
+    return provider;
+}
+
+void
+xf86SetCurrentRole(ScrnInfoPtr scrn, uint32_t role)
+{
+    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
+    scrn->current_role = role;
+
+    if (config->provider)
+        if (config->provider->randr_provider)
+            RRProviderSetCurrentRole(config->provider->randr_provider, scrn->current_role);
+}
+
