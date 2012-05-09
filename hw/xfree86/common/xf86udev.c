@@ -32,6 +32,7 @@ xf86_add_udev_device(const char *path, char *busid, const char *syspath)
     xf86_udev_devices[num_udev_devices].path = strdup(path);
     xf86_udev_devices[num_udev_devices].busid = strdup(busid);
     xf86_udev_devices[num_udev_devices].syspath = strdup(syspath);
+    xf86_udev_devices[num_udev_devices].pdev = NULL;
     num_udev_devices++;
     return 0;
 }
