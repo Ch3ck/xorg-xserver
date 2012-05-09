@@ -564,16 +564,13 @@ impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
     return TRUE;
 }
 
-#if 0
 void
 impedPictureDuplicate(PicturePtr pPicture, int new_gpu_index)
 {
-    impedPictPrivPtr imped_pict = impedGetPict(pPicture);
     PixmapPtr pPixmap;
-    impedPixmapPrivPtr imped_pixmap;
+    int error;
 
     pPixmap = GetDrawablePixmap(pPicture->pDrawable);
-    imped_pixmap = impedGetPixmap(pPixmap);
-    imped_pict->gpu[new_gpu_index] = DrvCreatePicture(imped_pixmap->gpu[new_gpu_index], pPicture->pFormat, 0, 0);
+    pPicture->gpu[new_gpu_index] = CreatePicture(0, &pPixmap->gpu[new_gpu_index]->drawable, pPicture->pFormat, 0, 0, serverClient, &error);
 }
-#endif
+

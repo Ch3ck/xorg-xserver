@@ -93,4 +93,12 @@ static inline void impedGetCompositeDeltas(DrawablePtr pDrawable, PixmapPtr pPix
 
 extern _X_EXPORT Bool
 impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
+extern _X_EXPORT void
+impedPictureDuplicate(PicturePtr pPicture, int new_gpu_index);
+
+int
+impedAddScreen(ScreenPtr protocol_master, ScreenPtr new);
+
+Bool
+impedRemoveScreen(ScreenPtr protocol_master, ScreenPtr slave);
 #endif
