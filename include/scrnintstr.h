@@ -57,10 +57,6 @@ SOFTWARE.
 #include "privates.h"
 #include "mi.h"
 
-#define ROLE_MASTER 0x1
-#define ROLE_SLAVE_OFFLOAD 0x2
-#define ROLE_SLAVE_OUTPUT 0x4
-
 typedef struct _PixmapFormat {
     unsigned char depth;
     unsigned char bitsPerPixel;

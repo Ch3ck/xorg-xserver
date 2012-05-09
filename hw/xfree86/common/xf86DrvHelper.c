@@ -54,10 +54,10 @@ retry:
             continue;
 
 	if (allow_slave) {
-            if (!(xf86GPUScreens[i]->roles & ROLE_SLAVE_OUTPUT))
+            if (!(xf86GPUScreens[i]->roles & RR_Role_Slave_Output))
                 continue;
         }
-        else if (!(xf86GPUScreens[i]->roles & ROLE_MASTER))
+        else if (!(xf86GPUScreens[i]->roles & RR_Role_Master))
             continue;
 
 	if (xf86GPUScreens[i]->numEntities != 1)
@@ -75,10 +75,9 @@ retry:
             height = xf86GPUScreens[i]->virtualY;
         ErrorF("attaching %s as primary master\n", xf86GPUScreens[i]->driverName);
 	impedAttachScreen(pScreen, xf86GPUScreens[i]->pScreen);
-        xf86GPUScreens[i]->current_role = ROLE_MASTER;
+        xf86SetCurrentRole(xf86GPUScreens[i], RR_Role_Master);
 	break;
     }
-
     
     if (!master && !allow_slave) {
         allow_slave = TRUE;
@@ -96,10 +95,10 @@ retry:
         if (xf86GPUScreens[i]->current_role)
             continue;
 
-        if (xf86GPUScreens[i]->roles & ROLE_SLAVE_OFFLOAD) {
+        if (xf86GPUScreens[i]->roles & RR_Role_Slave_Offload) {
             ErrorF("want to attach %s as offload slave\n", xf86GPUScreens[i]->driverName);
             impedAttachOffloadSlave(master->pScreen, xf86GPUScreens[i]->pScreen, 0);
-            xf86GPUScreens[i]->current_role = ROLE_SLAVE_OFFLOAD;
+            xf86SetCurrentRole(xf86GPUScreens[i], RR_Role_Slave_Offload);
         }
     }
 
