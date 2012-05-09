@@ -158,7 +158,8 @@ struct _rrProvider {
     RRProvider id;
     ScreenPtr pScreen; /* gpu screen more than likely */
     int current_role;
-    int allowed_roles;
+    uint32_t roles;
+    uint32_t abilities;
     void *devPrivate;
 };
 
@@ -209,7 +210,7 @@ typedef Bool (*RRSetPanningProcPtr) (ScreenPtr pScrn,
 
 typedef Bool (*RRProviderSetRoleProcPtr)(ScreenPtr pScreen,
 					 RRProviderPtr provider,
-					 int new_role);
+					 uint32_t new_role);
 
 typedef Bool (*RRGetInfoProcPtr) (ScreenPtr pScreen, Rotation * rotations);
 typedef Bool (*RRCloseScreenProcPtr) (ScreenPtr pscreen);
@@ -304,8 +305,8 @@ typedef struct _rrScrPriv {
 #endif
     Bool discontiguous;
 
-    int numProviders;
-    RRProviderPtr *providers;
+    //    int numProviders; /* should be only one provider per screen */
+    RRProviderPtr provider;
 } rrScrPrivRec, *rrScrPrivPtr;
 
 extern _X_EXPORT DevPrivateKeyRec rrPrivKeyRec;
@@ -889,6 +890,12 @@ RRProviderCreate(ScreenPtr pScreen, void *devPrivate);
 
 extern _X_EXPORT void
 RRProviderDestroy (RRProviderPtr provider);
+
+extern _X_EXPORT void
+RRProviderSetRolesAbilities(RRProviderPtr provider, uint32_t roles, uint32_t abilities);
+
+extern _X_EXPORT void
+RRProviderSetCurrentRole(RRProviderPtr provider, uint32_t current_role);
 
 extern _X_EXPORT Bool
 RRProviderLookup(XID id, RRProviderPtr *provider_p);

@@ -93,12 +93,10 @@ RRCloseScreen(ScreenPtr pScreen)
         RRCrtcDestroy(pScrPriv->crtcs[j]);
     for (j = pScrPriv->numOutputs - 1; j >= 0; j--)
         RROutputDestroy(pScrPriv->outputs[j]);
-    for (j = pScrPriv->numProviders - 1; j >= 0; j--)
-        RRProviderDestroy(pScrPriv->providers[j]);
+    RRProviderDestroy(pScrPriv->provider);
 
     free(pScrPriv->crtcs);
     free(pScrPriv->outputs);
-    free(pScrPriv->providers);
     free(pScrPriv);
     RRNScreens -= 1;            /* ok, one fewer screen with RandR running */
     return (*pScreen->CloseScreen) (pScreen);

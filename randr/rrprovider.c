@@ -24,6 +24,102 @@
 
 RESTYPE	RRProviderType;
 
+#define ADD_PROVIDER(iter) do {                                 \
+    pScrPriv = rrGetScrPriv((iter));                            \
+    if (pScrPriv->provider) {                                   \
+        providers[count_providers] = pScrPriv->provider->id;    \
+        if (client->swapped)                                    \
+            swapl(&providers[count_providers]);                 \
+        count_providers++;                                      \
+    }                                                           \
+    } while(0)
+
+static int
+rrGetProviderMultiScreen(ClientPtr client, ScreenPtr pScreen)
+{
+    xRRGetProvidersReply rep;
+    int total_providers, count_providers;
+    ScreenPtr gpuscreen, iter;
+    int i;
+    rrScrPrivPtr		pScrPriv;
+    int flags = RR_Provider_Flag_Dynamic;
+    CARD8 *extra;
+    unsigned int extraLen;
+    RRProvider *providers;
+
+    total_providers = 0;
+
+    for (i = 0; i < pScreen->num_gpu; i++) {
+        gpuscreen = pScreen->gpu[i];
+
+        pScrPriv = rrGetScrPriv(gpuscreen);
+        if (pScrPriv->provider)
+            total_providers++;
+
+        xorg_list_for_each_entry(iter, &gpuscreen->output_slave_list, output_head) {
+            pScrPriv = rrGetScrPriv(iter);
+            total_providers += pScrPriv->provider ? 1 : 0;
+        }
+        xorg_list_for_each_entry(iter, &gpuscreen->offload_slave_list, offload_head) {
+            pScrPriv = rrGetScrPriv(iter);
+            total_providers += pScrPriv->provider ? 1 : 0;
+        }
+    }
+    xorg_list_for_each_entry(iter, &pScreen->unattached_list, unattached_head) {
+        pScrPriv = rrGetScrPriv(iter);
+        total_providers += pScrPriv->provider ? 1 : 0;
+    }
+
+    rep.pad = 0;
+    rep.type = X_Reply;
+    rep.sequenceNumber = client->sequence;
+    rep.timestamp = pScrPriv->lastSetTime.milliseconds;
+    rep.length = 0;
+    rep.nProviders = total_providers;
+    rep.flags = flags;
+
+    rep.length = total_providers;
+    extraLen = rep.length << 2;
+    if (extraLen) {
+        extra = malloc(extraLen);
+        if (!extra)
+            return BadAlloc;
+    } else
+        extra = NULL;
+
+    providers = (RRProvider *)extra;
+    count_providers = 0;
+    for (i = 0; i < pScreen->num_gpu; i++) {
+        gpuscreen = pScreen->gpu[i];
+
+        ADD_PROVIDER(gpuscreen);
+
+        xorg_list_for_each_entry(iter, &gpuscreen->output_slave_list, output_head) {
+            ADD_PROVIDER(iter);
+        }
+        xorg_list_for_each_entry(iter, &gpuscreen->offload_slave_list, offload_head) {
+            ADD_PROVIDER(iter);
+        }
+    }
+    xorg_list_for_each_entry(iter, &pScreen->unattached_list, unattached_head) {
+        ADD_PROVIDER(iter);
+    }
+
+    if (client->swapped) {
+	swaps(&rep.sequenceNumber);
+	swapl(&rep.length);
+	swapl(&rep.timestamp);
+	swaps(&rep.nProviders);
+    }
+    WriteToClient(client, sizeof(xRRGetProvidersReply), (char *)&rep);
+    if (extraLen)
+    {
+	WriteToClient (client, extraLen, (char *) extra);
+	free(extra);
+    }
+    return Success;
+}
+
 int
 ProcRRGetProviders (ClientPtr client)
 {
@@ -37,6 +133,7 @@ ProcRRGetProviders (ClientPtr client)
     unsigned int extraLen;
     RRProvider *providers;
     int i;
+    int flags = 0;
 
     REQUEST_SIZE_MATCH(xRRGetProvidersReq);
     rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
@@ -44,6 +141,10 @@ ProcRRGetProviders (ClientPtr client)
 	return rc;
 
     pScreen = pWin->drawable.pScreen;
+
+    if (pScreen->num_gpu)
+        return rrGetProviderMultiScreen(client, pScreen);
+
     pScrPriv = rrGetScrPriv(pScreen);
 
     rep.pad = 0;
@@ -54,6 +155,7 @@ ProcRRGetProviders (ClientPtr client)
 	rep.sequenceNumber = client->sequence;
 	rep.length = 0;
 	rep.timestamp = currentTime.milliseconds;
+        rep.flags = 0;
 	rep.nProviders = 0;
 	extra = NULL;
 	extraLen = 0;
@@ -62,9 +164,10 @@ ProcRRGetProviders (ClientPtr client)
 	rep.sequenceNumber = client->sequence;
 	rep.timestamp = pScrPriv->lastSetTime.milliseconds;
 	rep.length = 0;
-	rep.nProviders = pScrPriv->numProviders;
+	rep.nProviders = 1;
+        rep.flags = flags;
 
-	rep.length = pScrPriv->numProviders;
+	rep.length = 1;
 	extraLen = rep.length << 2;
 	if (extraLen) {
 	    extra = malloc(extraLen);
@@ -74,11 +177,9 @@ ProcRRGetProviders (ClientPtr client)
 	    extra = NULL;
 		
 	providers = (RRProvider *)extra;
-	for (i = 0; i < pScrPriv->numProviders; i++) {
-	    providers[i] = pScrPriv->providers[i]->id;
+        providers[i] = pScrPriv->provider->id;
 	    if (client->swapped)
 		swapl(&providers[i]);
-	}
     }
 
     if (client->swapped) {
@@ -118,10 +219,11 @@ ProcRRGetProviderInfo (ClientPtr client)
     rep.sequenceNumber = client->sequence;
     rep.length = 0;
     rep.current_role = provider->current_role;
-    rep.allowed_roles = provider->allowed_roles;
+    rep.allowed_roles = provider->roles;
+    rep.abilities = provider->abilities;
     if (rep.current_role > 0) {
-      //        rep.nCrtcs = provider->numCrtcs;
-      //	rep.nOutputs = provider->numOutputs;
+        rep.nCrtcs = 0;//provider->numCrtcs;
+        rep.nOutputs = 0;//provider->numOutputs;
     } else {
         rep.nCrtcs = 0;
 	rep.nOutputs = 0;
@@ -158,7 +260,7 @@ ProcRRSetProviderRole (ClientPtr client)
     pScrPriv = rrGetScrPriv(pScreen);
 
     if (stuff->new_role) {
-	if (!(stuff->new_role & provider->allowed_roles))
+	if (!(stuff->new_role & provider->roles))
 	    return BadValue;
 
 	if (stuff->new_role == provider->current_role)
@@ -180,16 +282,6 @@ RRProviderCreate(ScreenPtr pScreen, void *devPrivate)
     
     pScrPriv = rrGetScrPriv(pScreen);
 
-    /* make space for the crtc pointer */
-    if (pScrPriv->numProviders)
-	providers = realloc(pScrPriv->providers, 
-			  (pScrPriv->numProviders + 1) * sizeof (RRProviderPtr));
-    else
-      providers = malloc(sizeof (RRProviderPtr));
-    if (!providers)
-	return NULL;
-    pScrPriv->providers = providers;
-
     provider = calloc(1, sizeof(RRProviderRec));
     if (!provider)
 	return NULL;
@@ -199,7 +291,7 @@ RRProviderCreate(ScreenPtr pScreen, void *devPrivate)
     provider->devPrivate = devPrivate;
     if (!AddResource (provider->id, RRProviderType, (pointer) provider))
 	return NULL;
-    pScrPriv->providers[pScrPriv->numProviders++] = provider;
+    pScrPriv->provider = provider;
     return provider;
 }
 
@@ -212,6 +304,19 @@ RRProviderDestroy (RRProviderPtr provider)
     FreeResource (provider->id, 0);
 }
 
+void
+RRProviderSetRolesAbilities(RRProviderPtr provider, uint32_t roles, uint32_t abilities)
+{
+    provider->roles = roles;
+    provider->abilities = abilities;
+}
+
+void
+RRProviderSetCurrentRole(RRProviderPtr provider, uint32_t current_role)
+{
+    provider->current_role = current_role;
+}
+
 static int
 RRProviderDestroyResource (pointer value, XID pid)
 {
@@ -222,17 +327,8 @@ RRProviderDestroyResource (pointer value, XID pid)
     {
 	rrScrPriv(pScreen);
 	int		i;
-    
-	for (i = 0; i < pScrPriv->numProviders; i++)
-	{
-	    if (pScrPriv->providers[i] == provider)
-	    {
-		memmove (pScrPriv->providers + i, pScrPriv->providers + i + 1,
-			 (pScrPriv->numProviders - (i + 1)) * sizeof (RRProviderPtr));
-		--pScrPriv->numProviders;
-		break;
-	    }
-	}
+
+        pScrPriv->provider = NULL;
     }
     free(provider);
     return 1;
