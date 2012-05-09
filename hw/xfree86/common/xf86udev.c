@@ -244,7 +244,7 @@ xf86ClaimUdevSlot(struct xf86_udev_device * d, DriverPtr drvp,
     return num;
 }
 
-int xf86UnclaimUdevSlot(struct xf86_udev_device *d)
+int xf86UnclaimUdevSlot(struct xf86_udev_device *d, GDevPtr dev)
 {
     int i;
 
@@ -252,7 +252,10 @@ int xf86UnclaimUdevSlot(struct xf86_udev_device *d)
 	const EntityPtr p = xf86Entities[i];
 
 	if ((p->bus.type == BUS_UDEV) && (p->bus.id.udev == d)) {
+            if (dev)
+                xf86RemoveDevFromEntity(i, dev);
 	    p->bus.type = BUS_NONE;
+            
 	    return 0;
 	}
     }
@@ -287,13 +290,15 @@ int xf86udevProbeDev(DriverPtr drvp)
 			    entity = xf86ClaimUdevSlot(&xf86_udev_devices[j],
 						       drvp, 0, devList[i], devList[i]->active);
 			    if (entity != -1) {
-				if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], devices[k].match_data))
+                                if (!drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], devices[k].match_data)) {
+				    xf86UnclaimUdevSlot(&xf86_udev_devices[j], devList[i]);
 				    continue;
+			      }
 				foundScreen = TRUE;
 				break;
 			    }
 			    else
-				xf86UnclaimUdevSlot(&xf86_udev_devices[j]);
+				xf86UnclaimUdevSlot(&xf86_udev_devices[j], devList[i]);
 			}
 		    }
 		}
@@ -303,8 +308,10 @@ int xf86udevProbeDev(DriverPtr drvp)
 		if (xf86_check_udev_slot(&xf86_udev_devices[j])) {
 		    entity = xf86ClaimUdevSlot(&xf86_udev_devices[j],
 					       drvp, 0, devList[i], devList[i]->active);
-		    if (drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], 0))
+		    if (!drvp->UdevProbe(drvp, entity, &xf86_udev_devices[j], 0)) {
+                        xf86UnclaimUdevSlot(&xf86_udev_devices[j], devList[i]);
 			continue;
+		    }
 		    foundScreen = TRUE;
 		}
 	    }
@@ -447,7 +454,7 @@ void RemoveOutputDevice(struct udev_device *udev_device)
     xf86DeleteGPUScreen(xf86GPUScreens[i], 0);
 #endif
 
-    xf86UnclaimUdevSlot(&xf86_udev_devices[i]);
+    xf86UnclaimUdevSlot(&xf86_udev_devices[i], NULL);
 
     for (j = i; j < num_udev_devices - 1; j++)
 	memcpy(&xf86_udev_devices[j], &xf86_udev_devices[j+1], sizeof(struct xf86_udev_device));
