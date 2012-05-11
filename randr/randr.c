@@ -93,7 +93,8 @@ RRCloseScreen(ScreenPtr pScreen)
         RRCrtcDestroy(pScrPriv->crtcs[j]);
     for (j = pScrPriv->numOutputs - 1; j >= 0; j--)
         RROutputDestroy(pScrPriv->outputs[j]);
-    RRProviderDestroy(pScrPriv->provider);
+    if (pScrPriv->provider)
+        RRProviderDestroy(pScrPriv->provider);
 
     free(pScrPriv->crtcs);
     free(pScrPriv->outputs);

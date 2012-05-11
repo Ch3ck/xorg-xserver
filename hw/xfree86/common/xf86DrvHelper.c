@@ -14,6 +14,9 @@
 #include "micmap.h"
 #include "imped.h"
 #include "xf86Priv.h"
+#include "xf86Crtc.h"
+
+Bool (*drv_dri2_hook)(ScreenPtr);
 
 static void xf86FixupRGBOrdering(ScrnInfoPtr scrn, ScreenPtr screen)
 {
@@ -44,7 +47,7 @@ impedHelperScreenInit(ScreenPtr pScreen,
     int i;
     Bool allow_slave = FALSE;
     ScrnInfoPtr master = NULL;
-
+   
     if (!impedSetupScreen(pScreen))
         return FALSE;
 
@@ -63,8 +66,8 @@ retry:
 	if (xf86GPUScreens[i]->numEntities != 1)
             continue;
 
-        if (!xf86IsEntityPrimary(xf86GPUScreens[i]->entityList[0]))
-            continue;
+	if (!xf86IsEntityPrimary(xf86GPUScreens[i]->entityList[0]))
+	    continue;
 
 	master = xf86GPUScreens[i];
 
@@ -126,15 +129,20 @@ retry:
         return FALSE;
     }
 
+   /* do dri2 init */
+    if (xf86LoaderCheckSymbol("DRI2Connect") && drv_dri2_hook)
+      drv_dri2_hook(pScreen);
+
     pScreen->SaveScreen = impedSaveScreen;
     xf86DisableRandR(); /* disable old randr extension */
-    //    impedRandR12Init(pScreen);
+
+    /* need to create a dumb randr 12 to handle protocol stuff */
+    impedRandR12Init(pScreen);
     return TRUE;
 }
 
-static Bool impedPointerMoved(ScrnInfoPtr pScrn, int x, int y)
+static void impedPointerMoved(ScrnInfoPtr pScrn, int x, int y)
 {
-    return TRUE;
 }
 
 static void
@@ -143,10 +151,10 @@ impedLeaveVT(ScrnInfoPtr pScrn, int flags)
 
 }
 
-static void
+static Bool
 impedEnterVT(ScrnInfoPtr pScrn, int flags)
 {
-
+    return TRUE;
 }
 
 void xf86HelperAddProtoScreens(int screennum)

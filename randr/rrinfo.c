@@ -192,6 +192,9 @@ RRGetInfo(ScreenPtr pScreen, Bool force_query)
     pScrPriv->changed = FALSE;
     pScrPriv->configChanged = FALSE;
 
+    if (!pScrPriv->rrGetInfo)
+	return TRUE;
+
     if (!(*pScrPriv->rrGetInfo) (pScreen, &rotations))
         return FALSE;
 

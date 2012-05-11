@@ -68,12 +68,18 @@ impedValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 	miComputeCompositeClip (pGC, pDrawable);
     }
 
+    if (pGC->pCompositeClip)
+        ErrorF("clip %d %d %d %d\n",
+               pGC->pCompositeClip->extents.x1,
+               pGC->pCompositeClip->extents.y1,
+               pGC->pCompositeClip->extents.x2,
+               pGC->pCompositeClip->extents.y2);
     /* have to translate the composite clip before syncing it */
 #ifdef COMPOSITE
     if (pDrawable->type == DRAWABLE_WINDOW) {
-      x_off = -pPixmap->screen_x;
-      y_off = -pPixmap->screen_y;
-      RegionTranslate(pGC->pCompositeClip, x_off, y_off);
+        x_off = -pPixmap->screen_x;
+        y_off = -pPixmap->screen_y;
+        RegionTranslate(pGC->pCompositeClip, x_off, y_off);
     }
 #endif
     for (i = 0; i < pGC->pScreen->num_gpu; i++) {

@@ -58,7 +58,7 @@
      (a)->y2 == (b)->y2)
 
 #define DAMAGE_VALIDATE_ENABLE 0
-#define DAMAGE_DEBUG_ENABLE 0
+#define DAMAGE_DEBUG_ENABLE 1
 #if DAMAGE_DEBUG_ENABLE
 #define DAMAGE_DEBUG(x)	ErrorF x
 #else
@@ -263,9 +263,16 @@ damageRegionAppend(DrawablePtr pDrawable, RegionPtr pRegion, Bool clip,
          */
 
         pDamageRegion = pRegion;
+        DAMAGE_DEBUG(("%s %d x %d +%d +%d (target 0x%lx monitor 0x%lx)\n",
+                      where,
+                      pDamageRegion->extents.x2 - pDamageRegion->extents.x1,
+                      pDamageRegion->extents.y2 - pDamageRegion->extents.y1,
+                      pDamageRegion->extents.x1, pDamageRegion->extents.y1,
+                      pDrawable->id, pDamage->pDrawable->id));
         if (clip || pDamage->pDrawable != pDrawable) {
             pDamageRegion = &clippedRec;
             if (pDamage->pDrawable->type == DRAWABLE_WINDOW) {
+	      ErrorF("clipping against border clip\n");
                 RegionIntersect(pDamageRegion, pRegion,
                                 &((WindowPtr) (pDamage->pDrawable))->
                                 borderClip);
@@ -280,6 +287,7 @@ damageRegionAppend(DrawablePtr pDrawable, RegionPtr pRegion, Bool clip,
                 RegionInit(&pixClip, &box, 1);
                 RegionIntersect(pDamageRegion, pRegion, &pixClip);
                 RegionUninit(&pixClip);
+		ErrorF("clipping against pixmap clip\n");
             }
             /*
              * Short circuit empty results

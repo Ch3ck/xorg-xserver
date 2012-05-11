@@ -274,7 +274,7 @@ impedDestroyPixmap(PixmapPtr pPixmap)
     ScreenPtr pScreen = pPixmap->drawable.pScreen;
     if (--pPixmap->refcnt)
 	return TRUE;
-
+    
     xorg_list_del(&pPixmap->member);
     for (i = 0; i < pScreen->num_gpu; i++) {
 	pScreen->gpu[i]->DestroyPixmap(pPixmap->gpu[i]);
@@ -293,6 +293,20 @@ static void
 impedBlockHandler(ScreenPtr pScreen, pointer blockData, pointer pTimeout,
                   pointer pReadmask)
 {
+    int i;
+    ScreenPtr master, slave;
+
+    for (i = 0; i < pScreen->num_gpu; i++) {
+	master = pScreen->gpu[i];
+
+	master->BlockHandler(master, blockData, pTimeout, pReadmask);
+	xorg_list_for_each_entry(slave, &master->offload_slave_list, offload_head) {
+	    slave->BlockHandler(slave, blockData, pTimeout, pReadmask);
+	}
+	xorg_list_for_each_entry(slave, &master->output_slave_list, output_head) {
+	    slave->BlockHandler(slave, blockData, pTimeout, pReadmask);
+	}
+    }
 }
 
 PixmapPtr
@@ -404,6 +418,14 @@ impedAttachUnboundScreen(ScreenPtr pScreen, ScreenPtr new)
     assert(!pScreen->isGPU);
     assert(new->isGPU);
     xorg_list_add(&new->unattached_head, &pScreen->unattached_list);
+    new->protocol_master = pScreen;
+}
+
+void
+impedDetachUnboundScreen(ScreenPtr pScreen, ScreenPtr slave)
+{
+    xorg_list_del(&slave->unattached_head);
+    slave->protocol_master = NULL;
 }
 
 /* attach a gpu screen to a protocol screen */
@@ -461,24 +483,6 @@ impedDetachOffloadSlave(ScreenPtr master, ScreenPtr slave)
 }
 
 void
-impedDetachAllSlaves(ScreenPtr pScreen)
-{
-    ScreenPtr iter, safe;
-
-    assert(pScreen->isGPU);
-
-    xorg_list_for_each_entry_safe(iter, safe, &pScreen->offload_slave_list, offload_head) {
-        impedDetachOffloadSlave(pScreen, iter);
-    }
-
-
-    xorg_list_for_each_entry_safe(iter, safe, &pScreen->output_slave_list, output_head) {
-        impedDetachOutputSlave(pScreen, iter);
-    }
-
-}
-
-void
 impedMigrateOutputSlaves(ScreenPtr pOldMaster, ScreenPtr pNewMaster)
 {
     ScreenPtr iter, safe;
@@ -493,4 +497,39 @@ impedMigrateOutputSlaves(ScreenPtr pOldMaster, ScreenPtr pNewMaster)
         xorg_list_del(&iter->output_head);
         xorg_list_add(&iter->output_head, &pNewMaster->output_slave_list);
     }
+}
+
+static Bool
+impedScreenSetSize(ScreenPtr pScreen,
+		   CARD16 width, CARD16 height,
+		   CARD32 mmWidth, CARD32 mmHeight)
+{
+    PixmapPtr pScrnPix;
+
+    SetRootClip(pScreen, FALSE);
+
+    pScrnPix = (*pScreen->GetScreenPixmap)(pScreen);
+    pScreen->width = pScrnPix->drawable.width = width;
+    pScreen->height = pScrnPix->drawable.width = height;
+
+    update_desktop_dimensions();
+
+    SetRootClip(pScreen, TRUE);
+
+    if (pScreen->root)
+        RRScreenSizeNotify(pScreen);
+    return TRUE;
+}
+
+Bool
+impedRandR12Init(ScreenPtr pScreen)
+{
+    rrScrPrivPtr rp;
+    if (!RRScreenInit(pScreen))
+        return FALSE;
+
+    rp = rrGetScrPriv(pScreen);
+    rp->rrScreenSetSize = impedScreenSetSize;
+
+    return TRUE;
 }

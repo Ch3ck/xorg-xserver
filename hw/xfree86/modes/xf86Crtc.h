@@ -219,6 +219,11 @@ typedef struct _xf86CrtcFuncs {
     void
      (*set_origin) (xf86CrtcPtr crtc, int x, int y);
 
+    /**
+     */
+    Bool
+    (*set_slave_pixmap)(xf86CrtcPtr crtc, PixmapPtr pixmap);
+
 } xf86CrtcFuncsRec, *xf86CrtcFuncsPtr;
 
 #define XF86_CRTC_VERSION 4

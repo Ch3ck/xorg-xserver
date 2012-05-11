@@ -454,7 +454,12 @@ VidModeExtensionInit(ScreenPtr pScreen);
 extern _X_EXPORT ScrnInfoPtr xf86ScreenToScrn(ScreenPtr pScreen);
 /* convert ScrnInfoPtr to ScreenPtr */
 extern _X_EXPORT ScreenPtr xf86ScrnToScreen(ScrnInfoPtr pScrn);
+extern _X_EXPORT Bool (*drv_dri2_hook)(ScreenPtr);
 
 #endif                          /* _NO_XF86_PROTOTYPES */
+
+#define XF86_HAS_SCRN_CONV 1
+
+#define XF86_SCRN_INTERFACE 1
 
 #endif                          /* _XF86_H */

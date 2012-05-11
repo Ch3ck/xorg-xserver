@@ -339,9 +339,12 @@ xf86CrtcFitsScreen(xf86CrtcPtr crtc, struct pict_f_transform *crtc_to_fb)
     /* When called before PreInit, the driver is
      * presumably doing load detect
      */
-    if (pScrn->virtualX == 0 || pScrn->virtualY == 0)
+    if (pScrn->is_gpu) {
         return TRUE;
-
+    }
+    else if (pScrn->virtualX == 0 || pScrn->virtualY == 0)
+            return TRUE;
+      
     b.x1 = 0;
     b.y1 = 0;
     b.x2 = crtc->mode.HDisplay;

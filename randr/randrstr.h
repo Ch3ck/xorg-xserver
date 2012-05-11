@@ -127,6 +127,8 @@ struct _rrCrtc {
     PictTransform transform;
     struct pict_f_transform f_transform;
     struct pict_f_transform f_inverse;
+
+    PixmapPtr slave_pixmap; /* may need to go in xf86 */
 };
 
 struct _rrOutput {
@@ -238,6 +240,8 @@ typedef Bool (*RRSetConfigProcPtr) (ScreenPtr pScreen,
 
 #endif
 
+typedef Bool (*RRCrtcSetSlavePixmapProcPtr)(RRCrtcPtr crtc, PixmapPtr pixmap);
+
 typedef struct _rrScrPriv {
     /*
      * 'public' part of the structure; DDXen fill this in
@@ -261,6 +265,9 @@ typedef struct _rrScrPriv {
     RRGetPanningProcPtr rrGetPanning;
     RRSetPanningProcPtr rrSetPanning;
 #endif
+    /* TODO #if RANDR_15_INTERFACE */
+    RRCrtcSetSlavePixmapProcPtr rrCrtcSlavePixmap;
+
     RRProviderSetRoleProcPtr rrProviderSetRole;
 
     /*

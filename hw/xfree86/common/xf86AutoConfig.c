@@ -278,7 +278,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 #if !defined(__linux__) && defined(__sparc__)
         matches[i++] = xnfstrdup("wsfb");
 #else
-        matches[i++] = xnfstrdup("fbdev");
+        matches[i++] = xnfstrdup("modesetting");
 #endif
     }
 #endif                          /* !sun */

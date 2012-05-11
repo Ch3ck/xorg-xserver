@@ -1,6 +1,7 @@
 #ifndef IMPED_H
 #define IMPED_H
 
+#include "randrstr.h"
 #include "picturestr.h"
 
 extern _X_EXPORT Bool impedSetupScreen(ScreenPtr pScreen);
@@ -27,6 +28,8 @@ impedCreateGC(GCPtr pGC);
 
 extern _X_EXPORT void
 impedAttachUnboundScreen(ScreenPtr pScreen, ScreenPtr new);
+extern _X_EXPORT void
+impedDetachUnboundScreen(ScreenPtr pScreen, ScreenPtr slave);
 
 extern _X_EXPORT void
 impedAttachScreen(ScreenPtr pScreen, ScreenPtr slave);
@@ -42,9 +45,6 @@ impedDetachOutputSlave(ScreenPtr pScreen, ScreenPtr slave);
 
 extern _X_EXPORT void
 impedDetachOffloadSlave(ScreenPtr pScreen, ScreenPtr slave);
-
-extern _X_EXPORT void
-impedDetachAllSlaves(ScreenPtr pScreen);
 
 extern _X_EXPORT void
 impedMigrateOutputSlaves(ScreenPtr pOldMaster, ScreenPtr pNewMaster);
@@ -101,4 +101,10 @@ impedAddScreen(ScreenPtr protocol_master, ScreenPtr new);
 
 extern _X_EXPORT Bool
 impedRemoveScreen(ScreenPtr protocol_master, ScreenPtr slave);
+
+extern _X_EXPORT Bool
+impedRandR12Init(ScreenPtr pScreen);
+
+Bool impedCheckPixmapBounding(ScreenPtr pScreen,
+			      RRCrtcPtr rr_crtc, int x, int y, int w, int h);
 #endif

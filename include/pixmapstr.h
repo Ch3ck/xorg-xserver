@@ -84,6 +84,8 @@ typedef struct _Pixmap {
     struct xorg_list member;
     PixmapPtr gpu[MAXGPU];
     Bool shattered;
+
+    PixmapPtr master_pixmap;
 } PixmapRec;
 
 static inline void

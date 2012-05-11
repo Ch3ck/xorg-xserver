@@ -222,10 +222,10 @@ typedef PixmapPtr (*DRI2CreateBufferPixmapProcPtr)(ScreenPtr pScreen,
 typedef void (*DRI2DestroyBufferPixmapProcPtr)(PixmapPtr pPixmap);
 
 typedef void (*DRI2CopyPixmapPtrCB)(PixmapPtr src, PixmapPtr dst,
-                                    RegionPtr pRegion, RegionPtr front_clip);
+                                    RegionPtr pRegion, int x, int y);
 
 typedef void (*DRI2CopyRegionPixmapProcPtr)(PixmapPtr src, PixmapPtr dst,
-                                            RegionPtr pRegion, RegionPtr f_c,
+                                            RegionPtr pRegion, int x, int y,
                                             DRI2CopyPixmapPtrCB cb);
 
 typedef int (*DRI2ScheduleSwapPixmapProcPtr) (PixmapPtr pDraw,

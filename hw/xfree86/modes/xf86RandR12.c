@@ -1758,12 +1758,32 @@ xf86RandR12EnterVT(ScrnInfoPtr pScrn, int flags)
     return RRGetInfo(pScreen, TRUE);    /* force a re-probe of outputs and notify clients about changes */
 }
 
+static void
+detach_all_slaves(ScreenPtr pScreen)
+{
+    ScreenPtr iter, safe;
+
+    assert(pScreen->isGPU);
+
+    xorg_list_for_each_entry_safe(iter, safe, &pScreen->offload_slave_list, offload_head) {
+        impedDetachOffloadSlave(pScreen, iter);
+        xf86SetCurrentRole(xf86ScreenToScrn(pScreen), 0);
+    }
+
+    xorg_list_for_each_entry_safe(iter, safe, &pScreen->output_slave_list, output_head) {
+        impedDetachOutputSlave(pScreen, iter);
+        xf86SetCurrentRole(xf86ScreenToScrn(pScreen), 0);
+    }
+
+}
+
 static Bool
 xf86RandR12ProviderSetRole(ScreenPtr pScreen,
                            RRProviderPtr provider,
                            uint32_t new_role)
 {
     ScreenPtr protocol_master;
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     if (!pScreen->isGPU)
         return FALSE;
@@ -1777,7 +1797,7 @@ xf86RandR12ProviderSetRole(ScreenPtr pScreen,
         pNewMaster = pScreen;
 
         impedMigrateOutputSlaves(pOldMaster, pNewMaster);
-        impedDetachAllSlaves(pOldMaster);
+        detach_all_slaves(pOldMaster);
 
 	impedAddScreen(protocol_master, pNewMaster);
 	impedRemoveScreen(protocol_master, pOldMaster);
@@ -1787,28 +1807,48 @@ xf86RandR12ProviderSetRole(ScreenPtr pScreen,
 
 	if (pOldMaster->roles & RR_Role_Slave_Output) {
 	    impedAttachOutputSlave(pNewMaster, pOldMaster, 0);
+            xf86SetCurrentRole(xf86ScreenToScrn(pScreen), RR_Role_Slave_Output);
 	}
 
-	if (pOldMaster->roles & RR_Role_Slave_Offload)
+	if (pOldMaster->roles & RR_Role_Slave_Offload) {
 	    impedAttachOffloadSlave(pNewMaster, pOldMaster, 0);
+            xf86SetCurrentRole(xf86ScreenToScrn(pScreen), RR_Role_Slave_Offload);
+        }
     }
 
     if (new_role == RR_Role_Slave_Output) {
+	if (provider->current_role == 0)
+	    impedDetachUnboundScreen(protocol_master, pScreen);
 	impedAttachOutputSlave(protocol_master->gpu[0],
 			       pScreen, 0);
+	xf86SetCurrentRole(xf86ScreenToScrn(pScreen), RR_Role_Slave_Output);
     }
 
     if (!new_role) {
-        if (provider->current_role == RR_Role_Slave_Output)
+        if (provider->current_role == RR_Role_Slave_Output) {
 	    impedDetachOutputSlave(protocol_master->gpu[0], pScreen);
+            xf86SetCurrentRole(xf86ScreenToScrn(pScreen), 0);
+        }
 
-        if (provider->current_role == RR_Role_Slave_Offload)
+        if (provider->current_role == RR_Role_Slave_Offload) {
 	    impedDetachOffloadSlave(protocol_master->gpu[0], pScreen);
+            xf86SetCurrentRole(xf86ScreenToScrn(pScreen), 0);
+        }
+	impedAttachUnboundScreen(protocol_master, pScreen);
     }
 
-    //    RRTellChanged(protocol_master);
+    RRTellChanged(protocol_master);
     SetRootClip(protocol_master, TRUE);
     return TRUE;
+}
+
+static Bool
+xf86CrtcSetSlavePixmap(RRCrtcPtr randr_crtc, PixmapPtr pixmap)
+{
+    xf86CrtcPtr crtc = randr_crtc->devPrivate;
+    if (!crtc->funcs->set_slave_pixmap)
+        return FALSE;
+    return crtc->funcs->set_slave_pixmap(crtc, pixmap);
 }
 
 static Bool
@@ -1835,6 +1875,7 @@ xf86RandR12Init12(ScreenPtr pScreen)
     rp->rrSetConfig = NULL;
 
     rp->rrProviderSetRole = xf86RandR12ProviderSetRole;
+    rp->rrCrtcSlavePixmap = xf86CrtcSetSlavePixmap;
     pScrn->PointerMoved = xf86RandR12PointerMoved;
     pScrn->ChangeGamma = xf86RandR12ChangeGamma;
 
@@ -1862,3 +1903,4 @@ xf86RandR12PreInit(ScrnInfoPtr pScrn)
 {
     return TRUE;
 }
+

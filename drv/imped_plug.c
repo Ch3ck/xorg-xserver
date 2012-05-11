@@ -94,6 +94,15 @@ impedAddScreen(ScreenPtr protocol_master, ScreenPtr new)
    	}
     }
 
+    /* set the screen pixmap up correctly */
+    {
+        PixmapPtr pPixmap;
+
+        pPixmap = protocol_master->GetScreenPixmap(protocol_master);
+
+        protocol_master->gpu[new_gpu_index]->SetScreenPixmap(pPixmap->gpu[new_gpu_index]);
+    }
+
     return 0;
 }
 
@@ -119,6 +128,7 @@ impedRemoveScreen(ScreenPtr protocol_master, ScreenPtr slave)
 	PicturePtr pPicture;
 	xorg_list_for_each_entry(pPicture, &protocol_master->picture_list, member) {
 	    PicturePtr tofree = pPicture->gpu[remove_index];
+	    pPicture->gpu[remove_index] = NULL;
 	    for (i = remove_index ; i < protocol_master->num_gpu - 1; i++)
 		pPicture->gpu[i] = pPicture->gpu[i + 1];
 	    FreePicture(tofree, (XID)0);
@@ -129,6 +139,7 @@ impedRemoveScreen(ScreenPtr protocol_master, ScreenPtr slave)
 	xorg_list_for_each_entry(pGC, &protocol_master->gc_list, member) {
 	    GCPtr tofree = pGC->gpu[remove_index];
 	    pGC->serialNumber = NEXT_SERIAL_NUMBER;
+	    pGC->gpu[remove_index] = NULL;
 	    for (i = remove_index ; i < protocol_master->num_gpu - 1; i++)
 		pGC->gpu[i] = pGC->gpu[i + 1];
 	    FreeGC(tofree, 0);
@@ -139,12 +150,14 @@ impedRemoveScreen(ScreenPtr protocol_master, ScreenPtr slave)
 	PixmapPtr pPixmap;
 	xorg_list_for_each_entry(pPixmap, &protocol_master->pixmap_list, member) {
 	    PixmapPtr tofree = pPixmap->gpu[remove_index];
+	    pPixmap->gpu[remove_index] = NULL;
 	    for (i = remove_index ; i < protocol_master->num_gpu - 1; i++)
 		pPixmap->gpu[i] = pPixmap->gpu[i + 1];
 	    (*slave->DestroyPixmap)(tofree);
 	}
     }
 
+    xorg_list_del(&slave->gpu_screen_head);
     protocol_master->gpu[remove_index] = NULL;
     for (i = remove_index; i < protocol_master->num_gpu - 1; i++)
 	protocol_master->gpu[i] = protocol_master->gpu[i + 1];

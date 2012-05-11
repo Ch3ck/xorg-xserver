@@ -73,6 +73,9 @@ RRSendConfigNotify(ScreenPtr pScreen)
     WindowPtr pWin = pScreen->root;
     xEvent event;
 
+    if (!pWin)
+        return;
+
     event.u.u.type = ConfigureNotify;
     event.u.configureNotify.window = pWin->drawable.id;
     event.u.configureNotify.aboveSibling = None;
@@ -208,7 +211,16 @@ ProcRRGetScreenSizeRange(ClientPtr client)
     rep.sequenceNumber = client->sequence;
     rep.length = 0;
 
-    if (pScrPriv) {
+    if (pScreen->num_gpu) {
+        rrScrPrivPtr gpupriv = rrGetScrPriv(pScreen->gpu[0]);
+        if (!RRGetInfo(pScreen->gpu[0], FALSE))
+            return BadAlloc;
+        rep.minWidth = gpupriv->minWidth;
+        rep.minHeight = gpupriv->minHeight;
+        rep.maxWidth = gpupriv->maxWidth;
+        rep.maxHeight = gpupriv->maxHeight;
+
+    } else if (pScrPriv) {
         if (!RRGetInfo(pScreen, FALSE))
             return BadAlloc;
         rep.minWidth = pScrPriv->minWidth;
@@ -232,29 +244,18 @@ ProcRRGetScreenSizeRange(ClientPtr client)
     return Success;
 }
 
-int
-ProcRRSetScreenSize(ClientPtr client)
+static int rr_check_single_size(ClientPtr client,
+                                 rrScrPrivPtr pScrPriv, int width, int height)
 {
-    REQUEST(xRRSetScreenSizeReq);
-    WindowPtr pWin;
-    ScreenPtr pScreen;
-    rrScrPrivPtr pScrPriv;
-    int i, rc;
-
-    REQUEST_SIZE_MATCH(xRRSetScreenSizeReq);
-    rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
-    if (rc != Success)
-        return rc;
-
-    pScreen = pWin->drawable.pScreen;
-    pScrPriv = rrGetScrPriv(pScreen);
-    if (stuff->width < pScrPriv->minWidth || pScrPriv->maxWidth < stuff->width) {
-        client->errorValue = stuff->width;
+    int i;
+    if (width < pScrPriv->minWidth || pScrPriv->maxWidth < width) {
+        ErrorF("pScrPriv w/h %d %d\n", pScrPriv->minWidth, pScrPriv->maxWidth);
+        client->errorValue = width;
         return BadValue;
     }
-    if (stuff->height < pScrPriv->minHeight ||
-        pScrPriv->maxHeight < stuff->height) {
-        client->errorValue = stuff->height;
+    if (height < pScrPriv->minHeight ||
+        pScrPriv->maxHeight < height) {
+        client->errorValue = height;
         return BadValue;
     }
     for (i = 0; i < pScrPriv->numCrtcs; i++) {
@@ -271,11 +272,51 @@ ProcRRSetScreenSize(ClientPtr client)
                 source_height = mode->mode.width;
             }
 
-            if (crtc->x + source_width > stuff->width ||
-                crtc->y + source_height > stuff->height)
+            if (crtc->x + source_width > width ||
+                crtc->y + source_height > height)
                 return BadMatch;
         }
     }
+    return Success;
+}
+static int rrCheckMultiScreenSize(ClientPtr client,
+                                  ScreenPtr pScreen, int width, int height)
+{
+    rrScrPrivPtr pScrPriv, gpupriv;
+    ScreenPtr gpuscreen;
+    int ret;
+    pScrPriv = rrGetScrPriv(pScreen);
+
+    gpuscreen = pScreen->gpu[0];
+    gpupriv = rrGetScrPriv(gpuscreen);
+    
+    ret = rr_check_single_size(client, gpupriv, width, height);
+    return ret;
+}
+
+int
+ProcRRSetScreenSize(ClientPtr client)
+{
+    REQUEST(xRRSetScreenSizeReq);
+    WindowPtr pWin;
+    ScreenPtr pScreen;
+    rrScrPrivPtr pScrPriv;
+    int i, rc;
+    int ret;
+
+    REQUEST_SIZE_MATCH(xRRSetScreenSizeReq);
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
+    if (rc != Success)
+        return rc;
+
+    pScreen = pWin->drawable.pScreen;
+    pScrPriv = rrGetScrPriv(pScreen);
+    if (pScreen->num_gpu)
+        ret = rrCheckMultiScreenSize(client, pScreen, stuff->width, stuff->height);
+    else
+        ret = rr_check_single_size(client, pScrPriv, stuff->width, stuff->height);
+    if (ret)
+        return ret;
     if (stuff->widthInMillimeters == 0 || stuff->heightInMillimeters == 0) {
         client->errorValue = 0;
         return BadValue;
@@ -288,6 +329,65 @@ ProcRRSetScreenSize(ClientPtr client)
     }
     return Success;
 }
+
+#define update_totals(gpuscreen, pScrPriv) do {	\
+    total_crtcs += pScrPriv->numCrtcs;		\
+    total_outputs += pScrPriv->numOutputs;	   \
+    modes = RRModesForScreen(gpuscreen, &num_modes);	\
+    if (!modes)							\
+	return BadAlloc;					\
+    for (j = 0; j < num_modes; j++)				\
+	total_name_len += modes[j]->mode.nameLength;		\
+    total_modes += num_modes;					\
+    free(modes);						\
+} while(0)
+
+static inline void swap_modeinfos(xRRModeInfo *modeinfos, int i)
+{
+    swapl(&modeinfos[i].id);
+    swaps(&modeinfos[i].width);
+    swaps(&modeinfos[i].height);
+    swapl(&modeinfos[i].dotClock);
+    swaps(&modeinfos[i].hSyncStart);
+    swaps(&modeinfos[i].hSyncEnd);
+    swaps(&modeinfos[i].hTotal);
+    swaps(&modeinfos[i].hSkew);
+    swaps(&modeinfos[i].vSyncStart);
+    swaps(&modeinfos[i].vSyncEnd);
+    swaps(&modeinfos[i].vTotal);
+    swaps(&modeinfos[i].nameLength);
+    swapl(&modeinfos[i].modeFlags);
+}
+
+#define update_arrays(gpuscreen, pScrPriv) do {		\
+    for (j = 0; j < pScrPriv->numCrtcs; j++) {		\
+        crtcs[crtc_count] = pScrPriv->crtcs[j]->id;     \
+        if (client->swapped)                            \
+            swapl(&crtcs[crtc_count]);                          \
+        crtc_count++;                                           \
+    }                                                           \
+    for (j = 0; j < pScrPriv->numOutputs; j++) {            \
+        outputs[output_count] = pScrPriv->outputs[j]->id;           \
+        if (client->swapped)                                    \
+            swapl(&outputs[output_count]);                      \
+        output_count++;                                         \
+    }                                                           \
+    {                                                           \
+        RRModePtr mode;                                         \
+        modes = RRModesForScreen(gpuscreen, &num_modes);        \
+        for (j = 0; j < num_modes; j++) {                       \
+            mode = modes[j];                                    \
+            modeinfos[mode_count] = mode->mode;                 \
+            if (client->swapped) {                              \
+                swap_modeinfos(modeinfos, i);                           \
+            }                                                           \
+            memcpy(names, mode->name, mode->mode.nameLength);           \
+            names += mode->mode.nameLength;                             \
+            mode_count++;                                               \
+        }                                                               \
+        free(modes);                                                    \
+    }                                                                   \
+    } while (0)
 
 static int
 rrGetMultiScreenResources(ClientPtr client, Bool query, ScreenPtr pScreen)
@@ -319,32 +419,16 @@ rrGetMultiScreenResources(ClientPtr client, Bool query, ScreenPtr pScreen)
 
         pScrPriv = rrGetScrPriv(gpuscreen);
 
-        total_crtcs += pScrPriv->numCrtcs;
-        total_outputs += pScrPriv->numOutputs;
+	if (query && pScrPriv)
+            if (!RRGetInfo(gpuscreen, query))
+                return BadAlloc;
 
-        /* maybe add a mode count fn */
-        modes = RRModesForScreen(gpuscreen, &num_modes);
-        if (!modes)
-            return BadAlloc;
-
-        for (j = 0; j < num_modes; j++)
-            total_name_len += modes[j]->mode.nameLength;
-        total_modes += num_modes;
-        free(modes);
+	update_totals(gpuscreen, pScrPriv);
 
         xorg_list_for_each_entry(iter, &gpuscreen->output_slave_list, output_head) {
             pScrPriv = rrGetScrPriv(iter);
-            total_crtcs += pScrPriv->numCrtcs;
-            total_outputs += pScrPriv->numOutputs;
 
-            modes = RRModesForScreen(gpuscreen, &num_modes);
-            if (!modes)
-                return BadAlloc;
-
-            for (j = 0; j < num_modes; j++)
-                total_name_len += modes[j]->mode.nameLength;
-            total_modes += num_modes;
-            free(modes);
+	    update_totals(iter, pScrPriv);
         }
     }
 
@@ -389,46 +473,12 @@ rrGetMultiScreenResources(ClientPtr client, Bool query, ScreenPtr pScreen)
         gpuscreen = pScreen->gpu[i];
 
         pScrPriv = rrGetScrPriv(gpuscreen);
-        for (j = 0; j < pScrPriv->numCrtcs; j++) {
-            crtcs[crtc_count] = pScrPriv->crtcs[j]->id;
-            if (client->swapped)
-                swapl(&crtcs[crtc_count]);
-            crtc_count++;
-        }
+        update_arrays(gpuscreen, pScrPriv);
 
-        for (j = 0; j < pScrPriv->numOutputs; j++) {
-            outputs[output_count] = pScrPriv->outputs[j]->id;
-            if (client->swapped)
-                swapl(&outputs[output_count]);
-            output_count++;
-        }
+        xorg_list_for_each_entry(iter, &gpuscreen->output_slave_list, output_head) {
+            pScrPriv = rrGetScrPriv(iter);
 
-        {
-            RRModePtr mode;
-            modes = RRModesForScreen(gpuscreen, &num_modes);
-            for (j = 0; j < num_modes; j++) {
-                mode = modes[j];
-                modeinfos[mode_count] = mode->mode;
-                if (client->swapped) {
-                    swapl(&modeinfos[i].id);
-                    swaps(&modeinfos[i].width);
-                    swaps(&modeinfos[i].height);
-                    swapl(&modeinfos[i].dotClock);
-                    swaps(&modeinfos[i].hSyncStart);
-                    swaps(&modeinfos[i].hSyncEnd);
-                    swaps(&modeinfos[i].hTotal);
-                    swaps(&modeinfos[i].hSkew);
-                    swaps(&modeinfos[i].vSyncStart);
-                    swaps(&modeinfos[i].vSyncEnd);
-                    swaps(&modeinfos[i].vTotal);
-                    swaps(&modeinfos[i].nameLength);
-                    swapl(&modeinfos[i].modeFlags);
-                }
-                memcpy(names, mode->name, mode->mode.nameLength);
-                names += mode->mode.nameLength;
-                mode_count++;
-            }
-            free(modes);
+	    update_arrays(iter, pScrPriv);
         }
     }
 

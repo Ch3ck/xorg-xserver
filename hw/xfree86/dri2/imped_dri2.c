@@ -10,9 +10,12 @@
 #include "list.h"
 #include "windowstr.h"
 
+#include "imped.h"
 #include "dri2.h"
 #include "dri2_priv.h"
 
+#include "gcstruct.h"
+#include "damagestr.h"
 typedef struct {
     int refcnt;
     PixmapPtr pixmap;
@@ -35,15 +38,14 @@ GetScreenPrime(ScreenPtr master, int prime_id)
         return master->gpu[master->primary_gpu_index];
     }
     i = 0;
-    xorg_list_for_each_entry(slave, &master->offload_slave_list, offload_head) {
+    xorg_list_for_each_entry(slave, &master->gpu[master->primary_gpu_index]->offload_slave_list, offload_head) {
         if (i == (prime_id - 1))
             break;
         i++;
     }
     if (!slave)
         return master->gpu[master->primary_gpu_index];
-    /* TODO */
-    return master->gpu[master->primary_gpu_index];
+    return slave;
 }
 
 
@@ -198,9 +200,41 @@ static void imped_dri2_destroy_buffer(DrawablePtr pDraw,
     imped_dri2_unref_buffer(NULL, buffer);
 }
 
+static Bool
+update_prime_state(DRI2BufferPtr buffer, RegionPtr region,
+		   PixmapPtr mpix)
+{
+    impedDRI2BufferPrivatePtr private;
+    ScreenPtr master, slave;
+    int fd_handle, ret;
+    PixmapPtr spix;
+    private = buffer->driverPrivate;
+
+    master = mpix->drawable.pScreen;
+    ret = master->SharePixmapBacking(mpix, &fd_handle);
+
+    slave = GetScreenPrime(mpix->drawable.pScreen->protocol_master, private->prime_id);
+    
+    spix = slave->CreatePixmap(slave, 0, 0, (buffer->format != 0) ? buffer->format : mpix->drawable.depth, CREATE_PIXMAP_USAGE_SHARED);
+
+    slave->ModifyPixmapHeader(spix, mpix->drawable.width, mpix->drawable.height,
+                              (buffer->format != 0) ? buffer->format : mpix->drawable.depth,
+                              0, mpix->devKind, NULL);
+
+    ret = slave->SetSharedPixmapBacking(spix, fd_handle);
+    if (ret == FALSE) {
+        ErrorF("failed to slave pixmap\n");
+        return FALSE;
+    }
+
+    private->pixmap = spix;
+    /* share pixmap + import pixmap */
+    return TRUE;
+}
+
 static void
 imped_dri2_copy_region_callback(PixmapPtr src, PixmapPtr dst,
-				RegionPtr pRegion, RegionPtr front_clip)
+				RegionPtr pRegion, int x, int y)
 {
     miCopyProc copy;
     int nbox;
@@ -216,26 +250,41 @@ imped_dri2_copy_region_callback(PixmapPtr src, PixmapPtr dst,
     ValidateGC(&dst->drawable, gc);
     nbox = RegionNumRects(pRegion);
     pbox = RegionRects(pRegion);
-    copy(&src->drawable, &dst->drawable, gc, pbox, nbox, 0, 0, 0, 0, 0, NULL);
+    copy(&src->drawable, &dst->drawable, gc, pbox, nbox, -x, -y, 0, 0, 0, NULL);
     FreeScratchGC(gc);
 }
 
 
 static void
 imped_copy_region(PixmapPtr pixmap, RegionPtr pRegion,
-		  DRI2BufferPtr dst_buffer, DRI2BufferPtr src_buffer)
+		  DRI2BufferPtr dst_buffer, DRI2BufferPtr src_buffer, int x, int y)
 {
     impedDRI2BufferPrivatePtr src_private = src_buffer->driverPrivate;
     impedDRI2BufferPrivatePtr dst_private = dst_buffer->driverPrivate;
     PixmapPtr src, dst;
-
+    int ret;
     ScreenPtr pScreen = pixmap->drawable.pScreen;
     DRI2ScreenPtr gpu_ds = DRI2GetScreen(pScreen);
     
     src = src_private->pixmap;
     dst = dst_private->pixmap;
 
-    gpu_ds->CopyRegionPixmap(src, dst, pRegion, NULL, imped_dri2_copy_region_callback);
+    if (src_private->attachment == DRI2BufferFrontLeft) {
+        if (!src || src->drawable.pScreen != pixmap->drawable.pScreen) {
+            ErrorF("copying prime in reverse %p\n", src);
+            return;
+        }
+    } else if (dst_private->attachment == DRI2BufferFrontLeft) {
+        if (!dst || dst->drawable.pScreen != pixmap->drawable.pScreen) {
+            ret = update_prime_state(dst_buffer, NULL, pixmap);
+            if (ret == FALSE)
+                return;
+            dst = dst_private->pixmap;
+        }
+        gpu_ds = DRI2GetScreen(dst->drawable.pScreen);
+    }
+
+    gpu_ds->CopyRegionPixmap(src, dst, pRegion, x, y, imped_dri2_copy_region_callback);
 }
 
 static void imped_dri2_copy_region(DrawablePtr pDraw,
@@ -247,15 +296,48 @@ static void imped_dri2_copy_region(DrawablePtr pDraw,
     PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
     PixmapPtr src;
     PixmapPtr dst;
+    GCPtr gc;
+    RegionPtr pCopyClip;
+    int x, y;
+    int scr_x, scr_y;
 
-    ErrorF("draw copy region %d %dx%d vs p %dx%d\n", pDraw->type, pDraw->width, pDraw->height, pPixmap->drawable.width, pPixmap->drawable.height);
+    impedGetDrawableDeltas(pDraw, pPixmap, &x, &y);
+    impedGetCompositeDeltas(pDraw, pPixmap, &scr_x, &scr_y);
+    gc = GetScratchGC(pDraw->depth, pDraw->pScreen);
+    pCopyClip = RegionCreate(NULL, 0);
+    RegionCopy(pCopyClip, pRegion);
+    (*gc->funcs->ChangeClip)(gc, CT_REGION, pCopyClip, 0);
+    ValidateGC(pDraw, gc);
 
-    imped_copy_region(pPixmap->gpu[pDraw->pScreen->primary_gpu_index], pRegion, pDestBuffer, pSrcBuffer);
+    ErrorF("draw copy region %d %dx%d vs p %dx%d @ %dx%d, scr %dx%d\n", pDraw->type, pDraw->width, pDraw->height, pPixmap->drawable.width, pPixmap->drawable.height, x, y, scr_x, scr_y);
+
+    //    RegionTranslate(gc->pCompositeClip, -scr_x, -scr_y);
+
+    {
+      int nbox = RegionNumRects(gc->pCompositeClip);
+      BoxPtr pbox = RegionRects(gc->pCompositeClip);
+      int ind;
+
+      for (ind = 0; ind < nbox; ind++) {
+	ErrorF("%d: %d %d %d %d\n", ind, pbox[ind].x1, pbox[ind].y1,
+	       pbox[ind].x2, pbox[ind].y2);
+      /* debugging */
+      }
+    }
+
+    DamageRegionAppend(pDraw, gc->pCompositeClip);
+
+    RegionTranslate(gc->pCompositeClip, -scr_x, -scr_y);
+    imped_copy_region(pPixmap->gpu[pDraw->pScreen->primary_gpu_index], gc->pCompositeClip, pDestBuffer, pSrcBuffer, x, y);
+
+    RegionTranslate(gc->pCompositeClip, scr_x, scr_y);
     
     if (pDraw->type == DRAWABLE_WINDOW) {
 	/* translate */
     }
+    DamageRegionProcessPending(pDraw);
 
+    FreeScratchGC(gc);
 }
 
 static int imped_dri2_schedule_swap(ClientPtr client,
