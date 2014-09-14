@@ -42,6 +42,7 @@ SUBDIRS = \
 	dix  \
 	fb \
 	mi \
+	drv\
 	Xext \
 	miext \
 	os \
