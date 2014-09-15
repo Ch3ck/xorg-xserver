@@ -590,13 +590,34 @@ typedef struct _Screen {
 
     Bool isGPU;
 
+    int primary_gpu_index;
+    int num_gpu;
+    /* subscreen lists - master gpus, offload gpus, output gpus, unattached gpus */
+    ScreenPtr gpu[MAXGPU];
+    struct xorg_list gpu_screen_list;
+    struct xorg_list offload_slave_list;
+    struct xorg_list output_slave_list;
     struct xorg_list unattached_list;
+  
+    /* subscreen list attachment points */
+    struct xorg_list gpu_screen_head;
+    struct xorg_list offload_head;
+    struct xorg_list output_head;
     struct xorg_list unattached_head;
 
-    ScreenPtr current_master;
+    /* object lists */
+    struct xorg_list gc_list;
+    struct xorg_list pixmap_list;
+    struct xorg_list picture_list;
 
-    struct xorg_list output_slave_list;
-    struct xorg_list output_head;
+    uint32_t roles;
+    ScreenPtr protocol_master;
+    ScreenPtr master;
+    ScreenPtr offload_master;
+    ScreenPtr output_master;
+
+    ScreenPtr current_master;
+    PixmapPtr omghack;
 
     SharePixmapBackingProcPtr SharePixmapBacking;
     SetSharedPixmapBackingProcPtr SetSharedPixmapBacking;
@@ -605,8 +626,6 @@ typedef struct _Screen {
     StopPixmapTrackingProcPtr StopPixmapTracking;
 
     struct xorg_list pixmap_dirty_list;
-    struct xorg_list offload_slave_list;
-    struct xorg_list offload_head;
 
     ReplaceScanoutPixmapProcPtr ReplaceScanoutPixmap;
     XYToWindowProcPtr XYToWindow;

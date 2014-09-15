@@ -44,6 +44,17 @@ impedAllocatePrivates(ScreenPtr pScreen)
     return TRUE;
 }
 
+
+static inline PixmapPtr ImpedGetDrawablePixmap(DrawablePtr drawable)
+{
+    if (drawable->type == DRAWABLE_PIXMAP)
+        return (PixmapPtr)drawable;
+    else {
+        struct _Window *pWin = (struct _Window *)drawable;
+        return drawable->pScreen->GetWindowPixmap(pWin);
+    }
+}
+
 static Bool
 impedCreateScreenResources(ScreenPtr pScreen)
 {
@@ -168,7 +179,7 @@ impedGetImage (DrawablePtr          pDrawable,
 {
     ScreenPtr pScreen = pDrawable->pScreen;
     RegionRec img_region;
-    PixmapPtr pPixmap = GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = ImpedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
 
     if (!impedDrawableEnabled(pDrawable))
@@ -237,7 +248,7 @@ impedCreatePixmap (ScreenPtr pScreen, int width, int height, int depth,
 
 static Bool
 impedModifyPixmapHeader(PixmapPtr pPixmap, int w, int h, int d,
-                        int bpp, int devKind, pointer pPixData)
+                        int bpp, int devKind, void * pPixData)
 {
     ScreenPtr iter;
     int i;
@@ -290,8 +301,8 @@ impedCloseScreen (ScreenPtr pScreen)
 }
 
 static void 
-impedBlockHandler(ScreenPtr pScreen, pointer blockData, pointer pTimeout,
-                  pointer pReadmask)
+impedBlockHandler (ScreenPtr pScreen, void * blockData, void * pTimeout,
+                  void * pReadmask)
 {
     int i;
     ScreenPtr master, slave;
@@ -299,12 +310,12 @@ impedBlockHandler(ScreenPtr pScreen, pointer blockData, pointer pTimeout,
     for (i = 0; i < pScreen->num_gpu; i++) {
 	master = pScreen->gpu[i];
 
-	master->BlockHandler(master, blockData, pTimeout, pReadmask);
+	master->BlockHandler(blockData, pTimeout, pReadmask);
 	xorg_list_for_each_entry(slave, &master->offload_slave_list, offload_head) {
-	    slave->BlockHandler(slave, blockData, pTimeout, pReadmask);
+	    slave->BlockHandler(blockData, pTimeout, pReadmask);
 	}
 	xorg_list_for_each_entry(slave, &master->output_slave_list, output_head) {
-	    slave->BlockHandler(slave, blockData, pTimeout, pReadmask);
+	    slave->BlockHandler(blockData, pTimeout, pReadmask);
 	}
     }
 }
@@ -375,7 +386,7 @@ impedSetupScreen(ScreenPtr pScreen)
 }
 
 Bool impedFinishScreenInit(ScreenPtr pScreen,
-                           pointer pbits,
+                           void *       pbits,
                            int          xsize,
                            int          ysize,
                            int          dpix,

@@ -7,13 +7,15 @@
 extern _X_EXPORT Bool impedSetupScreen(ScreenPtr pScreen);
 
 extern _X_EXPORT Bool impedFinishScreenInit(ScreenPtr pScreen,
-                                            pointer pbits,
+                                            void *      pbits,
                                             int         xsize,
                                             int         ysize,
                                             int         dpix,
                                             int         dpiy,
                                             int         width,
                                             int         bpp);
+
+extern _X_EXPORT Bool impedCloseScreen (ScreenPtr pScreen);
 
 #define impedGetScreenPixmap(s)	((PixmapPtr) (s)->devPrivate)
 

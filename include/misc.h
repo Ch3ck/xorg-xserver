@@ -90,6 +90,7 @@ OF THIS SOFTWARE.
 #define MAXEXTENSIONS   128
 #define MAXFORMATS	8
 #define MAXDEVICES	40      /* input devices */
+#define MAXGPU 4
 #define GPU_SCREEN_OFFSET 256
 
 /* 128 event opcodes for core + extension events, excluding GE */

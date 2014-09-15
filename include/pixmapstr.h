@@ -81,6 +81,10 @@ typedef struct _Pixmap {
     short screen_y;
 #endif
     unsigned usage_hint;        /* see CREATE_PIXMAP_USAGE_* */
+    PixmapPtr parent;
+    struct xorg_list member;
+    PixmapPtr gpu[MAXGPU];
+    Bool shattered;
 
     PixmapPtr master_pixmap;    /* pointer to master copy of pixmap for pixmap sharing */
 } PixmapRec;
