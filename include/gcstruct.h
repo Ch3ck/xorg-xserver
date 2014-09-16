@@ -287,6 +287,10 @@ typedef struct _GC {
     PixmapPtr pRotatedPixmap;   /* tile/stipple rotated for alignment */
     RegionPtr pCompositeClip;
     /* fExpose & freeCompClip defined above */
+
+    struct xorg_list member;
+    GCPtr parent;
+    GCPtr gpu[MAXGPU];
 } GC;
 
 #endif                          /* GCSTRUCT_H */

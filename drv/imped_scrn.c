@@ -45,16 +45,6 @@ impedAllocatePrivates(ScreenPtr pScreen)
 }
 
 
-static inline PixmapPtr ImpedGetDrawablePixmap(DrawablePtr drawable)
-{
-    if (drawable->type == DRAWABLE_PIXMAP)
-        return (PixmapPtr)drawable;
-    else {
-        struct _Window *pWin = (struct _Window *)drawable;
-        return drawable->pScreen->GetWindowPixmap(pWin);
-    }
-}
-
 static Bool
 impedCreateScreenResources(ScreenPtr pScreen)
 {
@@ -179,7 +169,7 @@ impedGetImage (DrawablePtr          pDrawable,
 {
     ScreenPtr pScreen = pDrawable->pScreen;
     RegionRec img_region;
-    PixmapPtr pPixmap = ImpedGetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
 
     if (!impedDrawableEnabled(pDrawable))

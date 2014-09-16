@@ -460,7 +460,7 @@ ChangeGCXIDs(ClientPtr client, GC * pGC, BITS32 mask, CARD32 *pC32)
     return ChangeGC(client, pGC, mask, vals);
 }
 
-static GCPtr
+GCPtr
 NewGCObject(ScreenPtr pScreen, int depth)
 {
     GCPtr pGC;

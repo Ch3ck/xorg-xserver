@@ -55,6 +55,7 @@ SOFTWARE.
 #include <X11/Xproto.h>
 #include "dix.h"
 #include "privates.h"
+#include "mi.h"
 
 typedef struct _PixmapFormat {
     unsigned char depth;
@@ -341,6 +342,10 @@ typedef void (*DeviceCursorCleanupProcPtr) (DeviceIntPtr /* pDev */ ,
 typedef void (*ConstrainCursorHarderProcPtr) (DeviceIntPtr, ScreenPtr, int,
                                               int *, int *);
 
+typedef miCopyProc (*GetCopyAreaFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst);
+
+typedef miCopyProc (*GetCopyPlaneFunctionProcPtr)(DrawablePtr pSrc, DrawablePtr pDst, int bitplane);
+
 
 typedef Bool (*SharePixmapBackingProcPtr)(PixmapPtr, ScreenPtr, void **);
 
@@ -617,6 +622,8 @@ typedef struct _Screen {
     ScreenPtr output_master;
 
     ScreenPtr current_master;
+    GetCopyAreaFunctionProcPtr GetCopyAreaFunction;
+    GetCopyPlaneFunctionProcPtr GetCopyPlaneFunction;
     PixmapPtr omghack;
 
     SharePixmapBackingProcPtr SharePixmapBacking;

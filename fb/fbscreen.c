@@ -90,6 +90,17 @@ _fbSetWindowPixmap(WindowPtr pWindow, PixmapPtr pPixmap)
     dixSetPrivate(&pWindow->devPrivates, fbGetWinPrivateKey(pWindow), pPixmap);
 }
 
+
+static miCopyProc
+fbGetCopyAreaFunction(DrawablePtr pSrc,
+                      DrawablePtr pDst)
+{
+    if (pSrc->bitsPerPixel != pDst->bitsPerPixel)
+        return fb24_32CopyMtoN;
+    else
+        return fbCopyNtoN;
+}
+
 Bool
 fbSetupScreen(ScreenPtr pScreen, void *pbits, /* pointer to screen bitmap */
               int xsize,        /* in pixels */

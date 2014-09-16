@@ -18,6 +18,7 @@
 #include "scrnintstr.h"
 #include "dixfontstr.h"
 #include "fb.h"
+#include "dix.h"
 
 static void setup_shatter_clip(RegionPtr orig_region, GCPtr pGC, PixmapPtr pPixmap)
 {
@@ -56,7 +57,7 @@ static void finish_shatter_clip(RegionPtr orig_region, GCPtr pGC)
 void
 impedValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 {
-    PixmapPtr pPixmap = GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDrawable);
     GCPtr pDrvGC;
     int i;
     int x_off = 0, y_off = 0;
@@ -122,7 +123,7 @@ static void impedDestroyGC(GCPtr pGC)
     }
 
     // TODO destroy driver GC
-    miDestroyGC(pGC);
+    //miDestroyGC(pGC);
 }
 
 static void impedModChildGC(GCPtr pGC, GCPtr pChild, int index, unsigned long mask)
@@ -252,7 +253,7 @@ impedFillSpans (DrawablePtr    pDrawable,
 {
     int i;
     int x_off, y_off;
-    PixmapPtr pPixmap = GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDrawable);
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
     for (i = 0; i < nInit; i++) {
 	pptInit[i].x += x_off;
@@ -278,7 +279,7 @@ impedSetSpans (DrawablePtr	    pDrawable,
 {
     int i;
     int x_off, y_off;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
     for (i = 0; i < nspans; i++) {
@@ -309,7 +310,7 @@ impedPutImage (DrawablePtr	pDrawable,
 	       char	*pImage)
 {
     int x_off, y_off;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
     x += x_off;
@@ -330,7 +331,7 @@ impedPolyPoint (DrawablePtr    pDrawable,
 		xPoint	    *pptInit)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     xPoint *origPts;
 
@@ -362,7 +363,7 @@ impedPolyLines (DrawablePtr	pDrawable,
 	       DDXPointPtr	ppt)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     DDXPointPtr ppt_orig;
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
@@ -396,7 +397,7 @@ impedPolySegment (DrawablePtr	pDrawable,
 		  xSegment *pSegs)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     xSegment *pSegs_orig;
 
@@ -424,7 +425,7 @@ static void
 impedPolyRectangle(DrawablePtr pDrawable, GCPtr pGC, int nrects, xRectangle *pRects)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     xRectangle *orig_pRects;
 
@@ -449,7 +450,7 @@ static void impedPolyArc (DrawablePtr	pDrawable,
 		   xArc		*parcs)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     xArc *orig_arcs;
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
@@ -474,7 +475,7 @@ static void impedFillPolygon( DrawablePtr pDrawable, GCPtr pGC,
 			      int count, DDXPointPtr pPts)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     DDXPointPtr orig_pts;
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
@@ -501,7 +502,7 @@ static void impedPolyFillRect(DrawablePtr pDrawable,
 			      xRectangle *prectInit)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     xRectangle *orig_prect;
 
@@ -525,7 +526,7 @@ static void impedPolyFillRect(DrawablePtr pDrawable,
 static void impedPolyFillArc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc *parcs)
 {
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     xArc *orig_arcs;
 
@@ -550,7 +551,7 @@ static int
 impedPolyText8(DrawablePtr pDrawable, GCPtr pGC, int x, int y, int count, char *chars)
 {
     int i, ret = 0;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     GCPtr pDrvGC;
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
@@ -567,7 +568,7 @@ impedPolyText16(DrawablePtr pDrawable, GCPtr pGC, int x, int y, int count, unsig
 {
     int ret = 0;
     int i;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
     GCPtr pDrvGC;
 
@@ -585,7 +586,7 @@ impedPolyText16(DrawablePtr pDrawable, GCPtr pGC, int x, int y, int count, unsig
 static void
 impedImageText8(DrawablePtr pDrawable, GCPtr pGC, int x, int y, int count, char *chars)
 {
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
@@ -596,7 +597,7 @@ impedImageText8(DrawablePtr pDrawable, GCPtr pGC, int x, int y, int count, char 
 static void
 impedImageText16(DrawablePtr pDrawable, GCPtr pGC, int x, int y, int count, unsigned short *chars)
 {
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
     int x_off, y_off;
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
@@ -610,10 +611,10 @@ impedPolyGlyphBlt (DrawablePtr	pDrawable,
 		   int		y,
 		   unsigned int	nglyph,
 		   CharInfoPtr	*ppci,
-		   pointer		pglyphBase)
+		   void		*pglyphBase)
 {
     int x_off, y_off;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
     x += x_off;
@@ -631,10 +632,10 @@ impedImageGlyphBlt (DrawablePtr	pDrawable,
 		    int		y,
 		    unsigned int	nglyph,
 		    CharInfoPtr	*ppciInit,
-		    pointer	pglyphBase)
+		    void 	*pglyphBase)
 {
     int x_off, y_off;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
     x += x_off;
@@ -660,8 +661,8 @@ impedCopyNtoN (DrawablePtr	pSrcDrawable,
     miCopyProc copy;
     int src_x_off, src_y_off;
     int dst_x_off, dst_y_off;
-    PixmapPtr pSrcPixmap = (PixmapPtr)GetDrawablePixmap(pSrcDrawable);
-    PixmapPtr pDstPixmap = (PixmapPtr)GetDrawablePixmap(pDstDrawable);
+    PixmapPtr pSrcPixmap = (PixmapPtr)impedGetDrawablePixmap(pSrcDrawable);
+    PixmapPtr pDstPixmap = (PixmapPtr)impedGetDrawablePixmap(pDstDrawable);
     int i;
     GCPtr pDrvGC = NULL;
 
@@ -737,8 +738,8 @@ impedCopyPlaneNtoN (DrawablePtr	pSrcDrawable,
     impedGCPrivPtr imped_gc;
 
     int i;
-    pSrcPixmap = GetDrawablePixmap(pSrcDrawable);
-    pDstPixmap = GetDrawablePixmap(pDstDrawable);
+    pSrcPixmap = impedGetDrawablePixmap(pSrcDrawable);
+    pDstPixmap = impedGetDrawablePixmap(pDstDrawable);
 
     for (i = 0; i < pSrcDrawable->pScreen->num_gpu; i++) {
 	copy = imped_src_screen->gpu[i]->GetCopyPlaneFunction(imped_src_pixmap->gpu[i],
@@ -772,8 +773,8 @@ impedCopyPlane (DrawablePtr	pSrcDrawable,
   //    drvCopyProc copy;
     PixmapPtr pSrcPixmap, pDstPixmap;
 
-    pSrcPixmap = GetDrawablePixmap(pSrcDrawable);
-    pDstPixmap = GetDrawablePixmap(pDstDrawable);
+    pSrcPixmap = impedGetDrawablePixmap(pSrcDrawable);
+    pDstPixmap = impedGetDrawablePixmap(pDstDrawable);
 
 #if 0
     copy = imped_src_screen->gpu[0]->GetCopyPlaneFunction(imped_src_pixmap->gpu[0],
@@ -807,7 +808,7 @@ impedPushPixels (GCPtr	    pGC,
 		 int	    yOrg)
 {
     int x_off, y_off;
-    PixmapPtr pPixmap = (PixmapPtr)GetDrawablePixmap(pDrawable);
+    PixmapPtr pPixmap = (PixmapPtr)impedGetDrawablePixmap(pDrawable);
 
     impedGetDrawableDeltas(pDrawable, pPixmap, &x_off, &y_off);
     xOrg += x_off;

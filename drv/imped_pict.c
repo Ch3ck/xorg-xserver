@@ -50,13 +50,13 @@ impedComposite (CARD8      op,
     int i;
 
     if (pSrc->pDrawable) {
-	pSrcPixmap = GetDrawablePixmap(pSrc->pDrawable);
+	pSrcPixmap = impedGetDrawablePixmap(pSrc->pDrawable);
     } 
 	
     if (pMask) {
-	pMaskPixmap = GetDrawablePixmap(pMask->pDrawable);
+	pMaskPixmap = impedGetDrawablePixmap(pMask->pDrawable);
     }
-    pDstPixmap = GetDrawablePixmap(pDst->pDrawable);
+    pDstPixmap = impedGetDrawablePixmap(pDst->pDrawable);
 
     miCompositeSourceValidate (pSrc);
     if (pMask)
@@ -127,7 +127,7 @@ impedRasterizeTrapezoid (PicturePtr    pPicture,
 			 int	    y_off)
 {
     ScreenPtr pScreen = pPicture->pDrawable->pScreen;
-    PixmapPtr pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pPicture->pDrawable);
     PicturePtr pDrvPicture;
     PictureScreenPtr drv_ps;
     int i;
@@ -150,7 +150,7 @@ impedAddTraps (PicturePtr	pPicture,
 	       xTrap	*traps)
 {
     PictureScreenPtr drv_ps;
-    PixmapPtr pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pPicture->pDrawable);
     ScreenPtr pScreen = pPicture->pDrawable->pScreen;
     PicturePtr pDrvPicture;
     int i;
@@ -185,7 +185,7 @@ impedTrapezoids (CARD8	    op,
     miCompositeSourceValidate (pSrc);
     if (pSrc) {
 	if (pSrc->pDrawable) {
-	    pSrcPixmap = GetDrawablePixmap(pSrc->pDrawable);
+	    pSrcPixmap = impedGetDrawablePixmap(pSrc->pDrawable);
 	    //if (imped_src_pixmap->shattered) ErrorF("%s: shattered src picture\n", __func__);
 	    impedGetDrawableDeltas(pSrc->pDrawable, pSrcPixmap, &x_off, &y_off);
 	    xSrc += x_off;
@@ -193,7 +193,7 @@ impedTrapezoids (CARD8	    op,
 	}
     }
     
-    pDstPixmap = GetDrawablePixmap(pDst->pDrawable);
+    pDstPixmap = impedGetDrawablePixmap(pDst->pDrawable);
     //if (imped_dst_pixmap->shattered) ErrorF("%s: shattered dst picture\n", __func__);
     impedGetDrawableDeltas(pDst->pDrawable, pDstPixmap, &x_off, &y_off);
     if (x_off || y_off) {
@@ -246,7 +246,7 @@ impedAddTriangles (PicturePtr  pPicture,
 		   xTriangle *tris)
 {
     int x_off, y_off;
-    PixmapPtr pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pPicture->pDrawable);
     ScreenPtr pScreen = pPicture->pDrawable->pScreen;
     int i;
 
@@ -283,12 +283,12 @@ impedTriangles (CARD8	    op,
 
     miCompositeSourceValidate (pSrc);
 
-    pSrcPixmap = GetDrawablePixmap(pSrc->pDrawable);
+    pSrcPixmap = impedGetDrawablePixmap(pSrc->pDrawable);
     impedGetDrawableDeltas(pSrc->pDrawable, pSrcPixmap, &x_off, &y_off);
     xSrc += x_off;
     ySrc += y_off;
 
-    pDstPixmap = GetDrawablePixmap(pDst->pDrawable);
+    pDstPixmap = impedGetDrawablePixmap(pDst->pDrawable);
     impedGetDrawableDeltas(pDst->pDrawable, pDstPixmap, &x_off, &y_off);
     if (x_off || y_off) {
 	for (i = 0; i < ntris; i++) {
@@ -338,12 +338,12 @@ impedGlyphs(CARD8      op,
     int x_off, y_off;
     int i;
     ScreenPtr pScreen = pDst->pDrawable->pScreen;
-    pSrcPixmap = GetDrawablePixmap(pSrc->pDrawable);
+    pSrcPixmap = impedGetDrawablePixmap(pSrc->pDrawable);
     impedGetDrawableDeltas(pSrc->pDrawable, pSrcPixmap, &x_off, &y_off);
     xSrc += x_off;
     ySrc += y_off;
 
-    pDstPixmap = GetDrawablePixmap(pDst->pDrawable);
+    pDstPixmap = impedGetDrawablePixmap(pDst->pDrawable);
     impedGetDrawableDeltas(pDst->pDrawable, pDstPixmap, &x_off, &y_off);
 
     //if (imped_src_pixmap->shattered) ErrorF("%s: shattered src picture\n", __func__);
@@ -449,7 +449,7 @@ impedCreatePicture (PicturePtr pPicture)
 
     ps = GetPictureScreen(pPicture->pDrawable->pScreen);
 
-    pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+    pPixmap = impedGetDrawablePixmap(pPicture->pDrawable);
 
     xorg_list_add(&pPicture->member, &pScreen->picture_list);
 
@@ -505,7 +505,7 @@ impedValidatePicture(PicturePtr pPicture, Mask mask)
     pScreen = pPicture->pDrawable->pScreen;
 #ifdef COMPOSITE
     if (pPicture->pCompositeClip && pPicture->pDrawable->type == DRAWABLE_WINDOW) {
-        PixmapPtr pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+        PixmapPtr pPixmap = impedGetDrawablePixmap(pPicture->pDrawable);
         x_off = -pPixmap->screen_x;
         y_off = -pPixmap->screen_y;
         RegionTranslate(pPicture->pCompositeClip, x_off, y_off);
@@ -570,7 +570,7 @@ impedPictureDuplicate(PicturePtr pPicture, int new_gpu_index)
     PixmapPtr pPixmap;
     int error;
 
-    pPixmap = GetDrawablePixmap(pPicture->pDrawable);
+    pPixmap = impedGetDrawablePixmap(pPicture->pDrawable);
     pPicture->gpu[new_gpu_index] = CreatePicture(0, &pPixmap->gpu[new_gpu_index]->drawable, pPicture->pFormat, 0, 0, serverClient, &error);
 }
 

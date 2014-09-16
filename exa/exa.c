@@ -673,6 +673,32 @@ exaBitmapToRegion(PixmapPtr pPix)
     return ret;
 }
 
+
+static miCopyProc
+exaGetCopyAreaFunction(DrawablePtr pSrc,
+                       DrawablePtr pDst)
+{
+    ExaScreenPriv (pDst->pScreen);
+
+    if (pExaScr->fallback_counter || pExaScr->swappedOut)
+      return ExaCheckCopyNtoN;
+    else
+      return exaCopyNtoN;
+}
+
+static miCopyProc
+exaGetCopyPlaneFunction(DrawablePtr pSrc,
+                        DrawablePtr pDst, int bitplane)
+{
+    ExaScreenPriv (pDst->pScreen);
+    miCopyProc copy;
+
+    copy = pExaScr->SavedGetCopyPlaneFunction(pSrc, pDst, bitplane);
+    if (!copy)
+        return NULL;
+    return NULL;//ExaCheckCopyPlaneNtoN;
+}
+
 static Bool
 exaCreateScreenResources(ScreenPtr pScreen)
 {

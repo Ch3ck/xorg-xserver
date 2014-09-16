@@ -9,6 +9,7 @@ libdri2_la_SOURCES = \
 	dri2.c \
 	dri2.h \
 	dri2ext.c \
-	dri2int.h
+	dri2int.h \
+	imped_dri2.c
 
 sdk_HEADERS = dri2.h

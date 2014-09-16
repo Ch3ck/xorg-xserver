@@ -93,6 +93,16 @@ static inline void impedGetCompositeDeltas(DrawablePtr pDrawable, PixmapPtr pPix
 #endif
 }
 
+static inline PixmapPtr impedGetDrawablePixmap(DrawablePtr drawable)
+{
+    if (drawable->type == DRAWABLE_PIXMAP)
+        return (PixmapPtr)drawable;
+    else {
+        struct _Window *pWin = (struct _Window *)drawable;
+        return drawable->pScreen->GetWindowPixmap(pWin);
+    }
+}
+
 extern _X_EXPORT Bool
 impedPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 extern _X_EXPORT void
