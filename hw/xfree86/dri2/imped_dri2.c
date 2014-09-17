@@ -140,7 +140,7 @@ static DRI2BufferPtr imped_dri2_create_buffer2(DrawablePtr pDraw,
 {
     ScreenPtr gpuScreen = GetScreenPrime(pDraw->pScreen, prime_id);
     DRI2ScreenPtr gpu_ds = DRI2GetScreen(gpuScreen);
-    PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDraw);
     PixmapPtr gpuPixmap = pPixmap->gpu[pDraw->pScreen->primary_gpu_index];
     DRI2BufferPtr buffer;
     PixmapPtr pixmap;
@@ -192,7 +192,7 @@ static void imped_dri2_destroy_buffer(DrawablePtr pDraw,
 				      DRI2BufferPtr buffer)
 {
     impedDRI2BufferPrivatePtr private;
-    PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDraw);
     PixmapPtr gpuPixmap = pPixmap->gpu[pDraw->pScreen->primary_gpu_index];
 
     if (!buffer)
@@ -211,7 +211,7 @@ update_prime_state(DRI2BufferPtr buffer, RegionPtr region,
     private = buffer->driverPrivate;
 
     master = mpix->drawable.pScreen;
-    ret = master->SharePixmapBacking(mpix, &fd_handle);
+    ret = master->SharePixmapBacking(mpix, slave, &fd_handle);
 
     slave = GetScreenPrime(mpix->drawable.pScreen->protocol_master, private->prime_id);
     
@@ -293,7 +293,7 @@ static void imped_dri2_copy_region(DrawablePtr pDraw,
                                    DRI2BufferPtr pSrcBuffer)
 {
     ScreenPtr gpuSceren = pDraw->pScreen->gpu[pDraw->pScreen->primary_gpu_index];
-    PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDraw);
     PixmapPtr src;
     PixmapPtr dst;
     GCPtr gc;
@@ -350,7 +350,7 @@ static int imped_dri2_schedule_swap(ClientPtr client,
                                     DRI2SwapEventPtr func, void *data)
 {
     ScreenPtr pScreen = pDraw->pScreen;
-    PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDraw);
     PixmapPtr gpuPixmap = pPixmap->gpu[pScreen->primary_gpu_index];
     int index = pScreen->primary_gpu_index;
     DRI2ScreenPtr gpu_ds = DRI2GetScreen(gpuPixmap->drawable.pScreen);
@@ -404,7 +404,7 @@ static int imped_dri2_schedule_swap(ClientPtr client,
 
 static int imped_dri2_get_msc(DrawablePtr pDraw, CARD64 *ust, CARD64 *msc)
 {
-    PixmapPtr pPixmap = GetDrawablePixmap(pDraw);
+    PixmapPtr pPixmap = impedGetDrawablePixmap(pDraw);
     ScreenPtr gpuScreen = pDraw->pScreen->gpu[pDraw->pScreen->primary_gpu_index];
     DRI2ScreenPtr gpu_ds = DRI2GetScreen(gpuScreen);
     PixmapPtr gpuPixmap = pPixmap->gpu[pDraw->pScreen->primary_gpu_index];

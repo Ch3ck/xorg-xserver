@@ -176,10 +176,49 @@ typedef void (*DRI2InvalidateProcPtr) (DrawablePtr pDraw, void *data, XID id);
 typedef Bool (*DRI2SwapLimitValidateProcPtr) (DrawablePtr pDraw,
                                               int swap_limit);
 
+
+/* Version 7 structure */
+enum DRI2FrameEventType {
+        DRI2_SWAP,
+        DRI2_FLIP,
+        DRI2_WAITMSC,
+        DRI2_SWAP_CHAIN,
+};
+
+typedef struct _DRI2FrameEvent {
+        XID drawable_id;
+        ClientPtr client;
+        enum DRI2FrameEventType type;
+        uint64_t frame;
+
+        /* for swaps & flips only */
+        DRI2SwapEventPtr event_complete;
+        void *event_data;
+        DRI2BufferPtr front;
+        DRI2BufferPtr back;
+        void *driverPrivate;
+} DRI2FrameEventRec, *DRI2FrameEventPtr;
+
+typedef Bool (*DRI2GetDriverInfoProcPtr)(ScreenPtr pScreen,
+                                         int driverType,
+                                         uint32_t *is_prime,
+                                         int *fd,
+                                         const char **drivername,
+                                         const char **deviceName);
+
+
 typedef DRI2BufferPtr(*DRI2CreateBuffer2ProcPtr) (ScreenPtr pScreen,
                                                   DrawablePtr pDraw,
                                                   unsigned int attachment,
                                                   unsigned int format);
+
+typedef PixmapPtr (*DRI2CreateBufferPixmapProcPtr)(ScreenPtr pScreen,
+                                                   PixmapPtr pPixmap,
+                                                   unsigned int attachment,
+                                                   unsigned int format,
+                                                   int w, int h,
+                                                   uint32_t *name);
+
 typedef void (*DRI2DestroyBuffer2ProcPtr) (ScreenPtr pScreen, DrawablePtr pDraw,
                                           DRI2BufferPtr buffer);
 
@@ -187,6 +226,29 @@ typedef void (*DRI2CopyRegion2ProcPtr) (ScreenPtr pScreen, DrawablePtr pDraw,
                                         RegionPtr pRegion,
                                         DRI2BufferPtr pDestBuffer,
                                         DRI2BufferPtr pSrcBuffer);
+
+typedef void (*DRI2DestroyBufferPixmapProcPtr)(PixmapPtr pPixmap);
+
+typedef void (*DRI2CopyPixmapPtrCB)(PixmapPtr src, PixmapPtr dst,
+                                    RegionPtr pRegion, int x, int y);
+
+typedef void (*DRI2CopyRegionPixmapProcPtr)(PixmapPtr src, PixmapPtr dst,
+                                            RegionPtr pRegion, int x, int y,
+                                            DRI2CopyPixmapPtrCB cb);
+
+typedef int (*DRI2ScheduleSwapPixmapProcPtr) (PixmapPtr pDraw,
+                                              RegionPtr f_c,
+                                              DRI2FrameEventPtr swap_info,
+                                              CARD64 * target_msc,
+                                              CARD64 divisor,
+                                              CARD64 remainder,
+                                              Bool can_flip);
+
+typedef int (*DRI2PageFlipPixmapProcPtr)(DRI2FrameEventPtr flip_info,
+                                         PixmapPtr back_pixmap,
+                                         RegionPtr f_c);
+
+typedef int (*DRI2ExchangePixmapProcPtr)(PixmapPtr front, PixmapPtr back);
 
 /**
  * \brief Get the value of a parameter.
@@ -238,6 +300,10 @@ typedef struct {
 
     DRI2ReuseBufferNotifyProcPtr ReuseBufferNotify;
     DRI2SwapLimitValidateProcPtr SwapLimitValidate;
+
+
+    /* added in version 7 for driver -> impedance layer */
+    DRI2GetDriverInfoProcPtr GetDriverInfo;
 
     /* added in version 7 */
     DRI2GetParamProcPtr GetParam;
