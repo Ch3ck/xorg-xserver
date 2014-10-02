@@ -40,6 +40,7 @@
 #include "mi.h"
 #include "migc.h"
 #include "picturestr.h"
+#include "imped.h"
 
 #ifdef FB_ACCESS_WRAPPER
 

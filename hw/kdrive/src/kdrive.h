@@ -43,6 +43,7 @@
 #include "shadow.h"
 #include "randrstr.h"
 #include "globals.h"
+#include "imped.h"
 
 #include "xkbstr.h"
 

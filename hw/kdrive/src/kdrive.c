@@ -44,6 +44,7 @@
 #endif
 
 #include <signal.h>
+#include "imped.h"
 
 typedef struct _kdDepths {
     CARD8 depth;
@@ -847,7 +848,12 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      * This is done in this order so that backing store wraps
      * our GC functions; fbFinishScreenInit initializes MI
      * backing store
+     * Initializes impedance layer for GC functions.
      */
+    if (!impedSetupScreen(pScreen)) {
+	return FALSE;
+    }
+
     if (!fbSetupScreen(pScreen,
                        screen->fb.frameBuffer,
                        width, height,
@@ -866,6 +872,17 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 
     pScreen->SaveScreen = KdSaveScreen;
     pScreen->CreateWindow = KdCreateWindow;
+
+    /*
+     * calls impedFinishScreenInit
+     */
+    if (!impedFinishScreenInit(pScreen,
+                            screen->fb.frameBuffer,
+                            width, height,
+                            monitorResolution, monitorResolution,
+                            screen->fb.pixelStride, screen->fb.bitsPerPixel)) {
+        return FALSE;
+    }
 
     if (!fbFinishScreenInit(pScreen,
                             screen->fb.frameBuffer,

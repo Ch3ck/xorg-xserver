@@ -295,7 +295,12 @@ winFinishScreenInitFB(int i, ScreenPtr pScreen, int argc, char **argv)
     /* Apparently we need this for the render extension */
     miSetPixmapDepths();
 
-    /* Start fb initialization */
+    /* Start fb initialization and Setup Impedance layer.*/
+    if (!impedSetupScreen(pScreen)) {
+	ErrorF("winFinishScreenInitDRV - impedSetupScreen failed\n");
+
+    }
+
     if (!fbSetupScreen(pScreen,
                        pScreenInfo->pfb,
                        pScreenInfo->dwWidth, pScreenInfo->dwHeight,
