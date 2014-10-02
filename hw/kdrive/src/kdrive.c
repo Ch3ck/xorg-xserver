@@ -911,7 +911,9 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      */
     pScreen->BlockHandler = KdBlockHandler;
     pScreen->WakeupHandler = KdWakeupHandler;
-
+	
+    if (!impedPictureInit(pScreen, 0, 0))//initializes Pictures to imped layer.
+	return FALSE;
     if (!fbPictureInit(pScreen, 0, 0))
         return FALSE;
     if (card->cfuncs->initScreen)
@@ -934,6 +936,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      * Wrap CloseScreen, the order now is:
      *  KdCloseScreen
      *  miBSCloseScreen
+     *  impedCloseScreen
      *  fbCloseScreen
      */
     pScreenPriv->CloseScreen = pScreen->CloseScreen;
@@ -948,6 +951,8 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
         screen->softCursor = TRUE;
         miDCInitialize(pScreen, &kdPointerScreenFuncs);
     }
+
+     //TODO: To insert impedCreateDefColormap(pScreen)
 
     if (!fbCreateDefColormap(pScreen)) {
         return FALSE;
