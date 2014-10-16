@@ -453,8 +453,10 @@ Bool
 Bool
  KdSaveScreen(ScreenPtr pScreen, int on);
 
+/* Modified routine to enable imped clipping. */
 Bool
- KdScreenInit(ScreenPtr pScreen, int argc, char **argv);
+ KdScreenInit(ScreenInfo * pScreenInfo,
+              KdScreenInfo * screen, int argc, char **argv);
 
 void
 

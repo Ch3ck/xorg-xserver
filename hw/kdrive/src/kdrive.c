@@ -803,10 +803,11 @@ KdSetSubpixelOrder(ScreenPtr pScreen, Rotation randr)
 /* Pass through AddScreen, which doesn't take any closure */
 static KdScreenInfo *kdCurrentScreen;
 
+/*Modified KdScreenInit to call KdInitScreen and used by KdInitOutput. */
 Bool
-KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
+KdScreenInit(ScreenInfo * pScreenInfo,
+              KdScreenInfo * screen, int argc, char **argv)
 {
-    KdScreenInfo *screen = kdCurrentScreen;
     KdCardInfo *card = screen->card;
     KdScreenInfo *drvscreen, *first = NULL;
     KdPrivScreenPtr pScreenPriv;
@@ -814,7 +815,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
     int width, height, *width_mmp, *height_mmp;
 
     /* sets up screen with imped layer */
-    if (!impedSetupScreen(pScreen))
+    if (!impedSetupScreen(screen->pScreen))
 	return FALSE;
     
     /* add screens to screen with imped */
@@ -823,7 +824,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
             if (drvscreen->proto_screen == screen->mynum) {
                 if (!first)
                     first = drvscreen;
-                    impedAttachScreen(pScreen, drvscreen->pScreen);
+                    impedAttachScreen(screen->pScreen, drvscreen->pScreen);
                 }
  
    
@@ -835,9 +836,9 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
     rotated = (first->randr & (RR_Rotate_90 | RR_Rotate_270)) != 0;
     
 
-    KdAllocatePrivates(pScreen);
+    KdAllocatePrivates(screen->pScreen);
 
-    pScreenPriv = KdGetScreenPriv(pScreen);
+    pScreenPriv = KdGetScreenPriv(screen->pScreen);
 
     if (!rotated) {
         width = first->width;
@@ -851,13 +852,13 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
         width_mmp = &first->height_mm;
         height_mmp = &first->width_mm;
     }
-    screen->pScreen = pScreen;
-    pScreenPriv->screen = screen;
-    pScreenPriv->card = card;
-    pScreenPriv->bytesPerPixel = screen->fb.bitsPerPixel >> 3;
-    pScreenPriv->dpmsState = KD_DPMS_NORMAL;
-    pScreen->x = screen->origin.x;
-    pScreen->y = screen->origin.y;
+    //screen->pScreen = pScreen;
+    //pScreenPriv->screen = screen;
+    //pScreenPriv->card = card;
+    //pScreenPriv->bytesPerPixel = screen->fb.bitsPerPixel >> 3;
+    //pScreenPriv->dpmsState = KD_DPMS_NORMAL;
+    //pScreen->x = screen->origin.x;
+    //pScreen->y = screen->origin.y;
 
     if (!monitorResolution)
         monitorResolution = 75;
@@ -867,10 +868,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      * backing store
      * Initializes impedance layer for GC functions.
      */
-    if (!impedSetupScreen(pScreen)) {
-	return FALSE;
-    }
-
+   
     //if (!fbSetupScreen(pScreen,
       //                 screen->fb.frameBuffer,
         //               width, height,
@@ -882,18 +880,18 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
     /*
      * Set colormap functions
      */
-    pScreen->InstallColormap = KdInstallColormap;
-    pScreen->UninstallColormap = KdUninstallColormap;
-    pScreen->ListInstalledColormaps = KdListInstalledColormaps;
-    pScreen->StoreColors = KdStoreColors;
+    screen->pScreen->InstallColormap = KdInstallColormap;
+    screen->pScreen->UninstallColormap = KdUninstallColormap;
+    screen->pScreen->ListInstalledColormaps = KdListInstalledColormaps;
+    screen->pScreen->StoreColors = KdStoreColors;
 
-    pScreen->SaveScreen = KdSaveScreen;
-    pScreen->CreateWindow = KdCreateWindow;
+    screen->pScreen->SaveScreen = KdSaveScreen;
+    screen->pScreen->CreateWindow = KdCreateWindow;
 
     /*
      * calls impedFinishScreenInit
      */
-    if (!impedFinishScreenInit(pScreen,
+    if (!impedFinishScreenInit(screen->pScreen,
                             screen->fb.frameBuffer,
                             width, height,
                             monitorResolution, monitorResolution,
@@ -906,34 +904,34 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      * Rounding errors are annoying
      */
     if (*width_mmp)
-        pScreen->mmWidth = *width_mmp;
+        screen->pScreen->mmWidth = *width_mmp;
     else
-        *width_mmp = pScreen->mmWidth;
+        *width_mmp = screen->pScreen->mmWidth;
     if (*height_mmp)
-        pScreen->mmHeight = *height_mmp;
+        screen->pScreen->mmHeight = *height_mmp;
     else
-        *height_mmp = pScreen->mmHeight;
+        *height_mmp = screen->pScreen->mmHeight;
 
     /*
      * Plug in our own block/wakeup handlers.
      * miScreenInit installs NoopDDA in both places
      */
-    pScreen->BlockHandler = KdBlockHandler;
-    pScreen->WakeupHandler = KdWakeupHandler;
+    screen->pScreen->BlockHandler = KdBlockHandler;
+    screen->pScreen->WakeupHandler = KdWakeupHandler;
 	
-    if (!impedPictureInit(pScreen, 0, 0))//initializes Pictures to imped layer.
+    if (!impedPictureInit(screen->pScreen, 0, 0))//initializes Pictures to imped layer.
 	return FALSE;
   
     if (card->cfuncs->initScreen)
-        if (!(*card->cfuncs->initScreen) (pScreen))
+        if (!(*card->cfuncs->initScreen) (screen->pScreen))
             return FALSE;
 
     if (!screen->dumb && card->cfuncs->initAccel)
-        if (!(*card->cfuncs->initAccel) (pScreen))
+        if (!(*card->cfuncs->initAccel) (screen->pScreen))
             screen->dumb = TRUE;
 
     if (card->cfuncs->finishInitScreen)
-        if (!(*card->cfuncs->finishInitScreen) (pScreen))
+        if (!(*card->cfuncs->finishInitScreen) (screen->pScreen))
             return FALSE;
 
 #if 0
@@ -946,26 +944,26 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      *  miBSCloseScreen
      *  impedCloseScreen
      */
-    pScreenPriv->CloseScreen = pScreen->CloseScreen;
-    pScreen->CloseScreen = KdCloseScreen;
+    pScreenPriv->CloseScreen = screen->pScreen->CloseScreen;
+    screen->pScreen->CloseScreen = KdCloseScreen;
 
-    pScreenPriv->CreateScreenResources = pScreen->CreateScreenResources;
-    pScreen->CreateScreenResources = KdCreateScreenResources;
+    pScreenPriv->CreateScreenResources = screen->pScreen->CreateScreenResources;
+    screen->pScreen->CreateScreenResources = KdCreateScreenResources;
 
     if (screen->softCursor ||
-        !card->cfuncs->initCursor || !(*card->cfuncs->initCursor) (pScreen)) {
+        !card->cfuncs->initCursor || !(*card->cfuncs->initCursor) (screen->pScreen)) {
         /* Use MI for cursor display and event queueing. */
         screen->softCursor = TRUE;
-        miDCInitialize(pScreen, &kdPointerScreenFuncs);
+        miDCInitialize(screen->pScreen, &kdPointerScreenFuncs);
     }
 
      //TODO: To insert impedCreateDefColormap(pScreen)
 
-    if (!miCreateDefColormap(pScreen)) {
+    if (!miCreateDefColormap(screen->pScreen)) {
         return FALSE;
     }
 
-    KdSetSubpixelOrder(pScreen, screen->randr);
+    KdSetSubpixelOrder(screen->pScreen, screen->randr);
 
     /*
      * Enable the hardware
@@ -980,14 +978,14 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
         if (card->cfuncs->preserve)
             (*card->cfuncs->preserve) (card);
         if (card->cfuncs->enable)
-            if (!(*card->cfuncs->enable) (pScreen))
+            if (!(*card->cfuncs->enable) (screen->pScreen))
                 return FALSE;
         pScreenPriv->enabled = TRUE;
         if (!screen->softCursor && card->cfuncs->enableCursor)
-            (*card->cfuncs->enableCursor) (pScreen);
-        KdEnableColormap(pScreen);
+            (*card->cfuncs->enableCursor) (screen->pScreen);
+        KdEnableColormap(screen->pScreen);
         if (!screen->dumb && card->cfuncs->enableAccel)
-            (*card->cfuncs->enableAccel) (pScreen);
+            (*card->cfuncs->enableAccel) (screen->pScreen);
     }
 
     return TRUE;
@@ -1153,7 +1151,7 @@ KdInitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             ret = (*card->cfuncs->cardinit) (card);
         if (ret) {
             for (screen = card->screenList; screen; screen = screen->next)
-                KdInitScreen(pScreenInfo, screen, argc, argv);
+                KdScreenInit(pScreenInfo, screen, argc, argv);
         }
     }
 
