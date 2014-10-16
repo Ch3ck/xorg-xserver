@@ -44,7 +44,6 @@
 #endif
 
 #include <signal.h>
-#include "imped.h"
 
 typedef struct _kdDepths {
     CARD8 depth;
@@ -479,6 +478,7 @@ KdProcessArgument(int argc, char **argv, int i)
             }
             if (card) {
                 screen = KdScreenInfoAdd(card);
+                screen->proto_screen = screen->mynum;
                 KdParseScreen(screen, argv[i + 1]);
             }
             else
@@ -808,31 +808,48 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
     KdScreenInfo *screen = kdCurrentScreen;
     KdCardInfo *card = screen->card;
+    KdScreenInfo *drvscreen, *first = NULL;
     KdPrivScreenPtr pScreenPriv;
+    Bool rotated;
+    int width, height, *width_mmp, *height_mmp;
 
+    /* sets up screen with imped layer */
+    if (!impedSetupScreen(pScreen))
+	return FALSE;
+    
+    /* add screens to screen with imped */
+    for (card = kdCardInfo; card; card = card->next)
+        for (drvscreen = card->screenList; drvscreen; drvscreen = drvscreen->next)
+            if (drvscreen->proto_screen == screen->mynum) {
+                if (!first)
+                    first = drvscreen;
+                    impedAttachScreen(pScreen, drvscreen->pScreen);
+                }
+ 
+   
     /*
      * note that screen->fb is set up for the nominal orientation
      * of the screen; that means if randr is rotated, the values
      * there should reflect a rotated frame buffer (or shadow).
      */
-    Bool rotated = (screen->randr & (RR_Rotate_90 | RR_Rotate_270)) != 0;
-    int width, height, *width_mmp, *height_mmp;
+    rotated = (first->randr & (RR_Rotate_90 | RR_Rotate_270)) != 0;
+    
 
     KdAllocatePrivates(pScreen);
 
     pScreenPriv = KdGetScreenPriv(pScreen);
 
     if (!rotated) {
-        width = screen->width;
-        height = screen->height;
-        width_mmp = &screen->width_mm;
-        height_mmp = &screen->height_mm;
+        width = first->width;
+        height = first->height;
+        width_mmp = &first->width_mm;
+        height_mmp = &first->height_mm;
     }
     else {
-        width = screen->height;
-        height = screen->width;
-        width_mmp = &screen->height_mm;
-        height_mmp = &screen->width_mm;
+        width = first->height;
+        height = first->width;
+        width_mmp = &first->height_mm;
+        height_mmp = &first->width_mm;
     }
     screen->pScreen = pScreen;
     pScreenPriv->screen = screen;
@@ -854,13 +871,13 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 	return FALSE;
     }
 
-    if (!fbSetupScreen(pScreen,
-                       screen->fb.frameBuffer,
-                       width, height,
-                       monitorResolution, monitorResolution,
-                       screen->fb.pixelStride, screen->fb.bitsPerPixel)) {
-        return FALSE;
-    }
+    //if (!fbSetupScreen(pScreen,
+      //                 screen->fb.frameBuffer,
+        //               width, height,
+          //             monitorResolution, monitorResolution,
+            //           screen->fb.pixelStride, screen->fb.bitsPerPixel)) {
+       // return FALSE;
+    //}
 
     /*
      * Set colormap functions
@@ -877,14 +894,6 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      * calls impedFinishScreenInit
      */
     if (!impedFinishScreenInit(pScreen,
-                            screen->fb.frameBuffer,
-                            width, height,
-                            monitorResolution, monitorResolution,
-                            screen->fb.pixelStride, screen->fb.bitsPerPixel)) {
-        return FALSE;
-    }
-
-    if (!fbFinishScreenInit(pScreen,
                             screen->fb.frameBuffer,
                             width, height,
                             monitorResolution, monitorResolution,
@@ -914,8 +923,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 	
     if (!impedPictureInit(pScreen, 0, 0))//initializes Pictures to imped layer.
 	return FALSE;
-    if (!fbPictureInit(pScreen, 0, 0))
-        return FALSE;
+  
     if (card->cfuncs->initScreen)
         if (!(*card->cfuncs->initScreen) (pScreen))
             return FALSE;
@@ -929,7 +937,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
             return FALSE;
 
 #if 0
-    fbInitValidateTree(pScreen);
+    impedInitValidateTree(pScreen);
 #endif
 
     /*
@@ -937,7 +945,6 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
      *  KdCloseScreen
      *  miBSCloseScreen
      *  impedCloseScreen
-     *  fbCloseScreen
      */
     pScreenPriv->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = KdCloseScreen;
@@ -954,7 +961,7 @@ KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 
      //TODO: To insert impedCreateDefColormap(pScreen)
 
-    if (!fbCreateDefColormap(pScreen)) {
+    if (!miCreateDefColormap(pScreen)) {
         return FALSE;
     }
 
@@ -1062,28 +1069,42 @@ static void
 KdAddScreen(ScreenInfo * pScreenInfo,
             KdScreenInfo * screen, int argc, char **argv)
 {
-    int i;
+    int           i;
+    KdCardInfo    *card;
+    KdScreenInfo  *drvscreen, *found = NULL;
 
     /*
      * Fill in fb visual type masks for this screen
      */
+    for (card = screen->card; card; card = card->next) {
+	for (drvscreen =card->screenList; drvscreen; drvscreen = drvscreen->next)
+	    if (drvscreen->proto_screen == screen->mynum)
+		found = drvscreen;
+		break;
+    }
+
+    if (!found) {
+        ErrorF("Can't find screen for protocol screen\n");
+	return;
+    }
+
     for (i = 0; i < pScreenInfo->numPixmapFormats; i++) {
         unsigned long visuals;
         Pixel rm, gm, bm;
 
         visuals = 0;
         rm = gm = bm = 0;
-        if (pScreenInfo->formats[i].depth == screen->fb.depth) {
-            visuals = screen->fb.visuals;
-            rm = screen->fb.redMask;
-            gm = screen->fb.greenMask;
-            bm = screen->fb.blueMask;
+        if (pScreenInfo->formats[i].depth == found->fb.depth) {
+            visuals = found->fb.visuals;
+            rm = found->fb.redMask;
+            gm = found->fb.greenMask;
+            bm = found->fb.blueMask;
         }
         fbSetVisualTypesAndMasks(pScreenInfo->formats[i].depth,
                                  visuals, 8, rm, gm, bm);
     }
 
-    kdCurrentScreen = screen;
+    kdCurrentScreen = found;
 
     AddScreen(KdScreenInit, argc, argv);
 }

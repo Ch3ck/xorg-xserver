@@ -107,7 +107,11 @@ fbSetupScreen(ScreenPtr pScreen, void *pbits, /* pointer to screen bitmap */
               int ysize, int dpix,      /* dots per inch */
               int dpiy, int width,      /* pixel width of frame buffer */
               int bpp)
-{                               /* bits per pixel for screen */
+{  
+    if (!impedSetupScreen(pScreen)) //Clips in Impedance layer.
+	return FALSE; 
+
+                             /* bits per pixel for screen */
     if (!fbAllocatePrivates(pScreen))
         return FALSE;
     pScreen->defColormap = FakeClientID(0);
@@ -140,8 +144,6 @@ fbSetupScreen(ScreenPtr pScreen, void *pbits, /* pointer to screen bitmap */
 
     pScreen->GetWindowPixmap = _fbGetWindowPixmap;
     pScreen->SetWindowPixmap = _fbSetWindowPixmap;
-    
-    impedSetupScreen(pScreen); //Clips in Impedance layer.
 
     return TRUE;
 }
@@ -246,13 +248,9 @@ wfbScreenInit(ScreenPtr pScreen,
               int width,
               int bpp, SetupWrapProcPtr setupWrap, FinishWrapProcPtr finishWrap)
 {
-    if (!impedSetupScreen(pScreen))//Sets up Impedance layer.
-	return FALSE;
     if (!fbSetupScreen(pScreen, pbits, xsize, ysize, dpix, dpiy, width, bpp))
         return FALSE;
-    if (!impedFinishScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy,
-                             width, bpp))
-	return FALSE;
+
     if (!wfbFinishScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy,
                              width, bpp, setupWrap, finishWrap))
         return FALSE;
@@ -265,14 +263,9 @@ fbScreenInit(ScreenPtr pScreen,
              void *pbits,
              int xsize, int ysize, int dpix, int dpiy, int width, int bpp)
 {
-    if (!impedSetupScreen(pScreen))//also clips impedance layer.
-	return FALSE;
     if (!fbSetupScreen(pScreen, pbits, xsize, ysize, dpix, dpiy, width, bpp))
         return FALSE;
 
-    if (!impedFinishScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy,
-                             width, bpp))
-	return FALSE;
     if (!fbFinishScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy,
                             width, bpp))
         return FALSE;

@@ -37,6 +37,7 @@
 #include "input.h"
 #include "mipointer.h"
 #include "mi.h"
+#include "micmap.h"
 #include "dix.h"
 #include "fb.h"
 #include "fboverlay.h"
@@ -101,6 +102,7 @@ typedef struct _KdScreenInfo {
     Bool dumb;
     Bool softCursor;
     int mynum;
+    int proto_screen;
     DDXPointRec origin;
     KdFrameBuffer fb;
 } KdScreenInfo;
